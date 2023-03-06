@@ -1,9 +1,13 @@
 ﻿using AttendaceManagementSystemWebAPI.Dto;
+using AttendaceManagementSystemWebAPI.Helper;
 using AttendaceManagementSystemWebAPI.Interfaces;
 using AttendaceManagementSystemWebAPI.Models;
 using AttendaceManagementSystemWebAPI.Repositories;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace AttendaceManagementSystemWebAPI.Controllers
 {
@@ -11,154 +15,173 @@ namespace AttendaceManagementSystemWebAPI.Controllers
     [ApiController]
     public class AttendanceLogController : Controller
     {
-        private readonly IAttendanceLogRepository _attendanceLogRepository;
-        private readonly IEmployeeRepository _employeeRepository;
+        private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
-        public AttendanceLogController(IAttendanceLogRepository attendanceLogRepository, IEmployeeRepository employeeRepository, IMapper mapper)
+        public AttendanceLogController(IUnitOfWork uow, IMapper mapper)
         {
-            _attendanceLogRepository= attendanceLogRepository;
-            _employeeRepository= employeeRepository;
+            _uow = uow;
             _mapper = mapper;
         }
 
+        [Authorize]
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<AttendanceLog>))]
-        public IActionResult GetEmployees()
-        {
-            var logs = _mapper.Map<List<AttendanceLogDto>>(_attendanceLogRepository.GetAttendaceLogs());
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            return Ok(logs);
-        }
-
-        [HttpGet("employee/{id}/attendance-logs")]
-        [ProducesResponseType(200, Type = typeof(AttendanceLog))]
-        [ProducesResponseType(400)]
-        public IActionResult GetAttendaceLogsByEmployee(int id)
+        public async Task<IActionResult> GetAttendanceLogs()
         {
 
-            var logs = _mapper.Map<List<AttendanceLogDto>>(_attendanceLogRepository.GetAttendaceLogsByEmployee(id));
-
-            if (!ModelState.IsValid)
+            ResponseApi<List<AttendanceLogDto>> response;
+            try
             {
-                return BadRequest(ModelState);
+                List<AttendanceLogDto> logs = _mapper.Map<List<AttendanceLogDto>>(await _uow.attendanceLogRepository.GetAttendanceLogs());
+
+                if (logs.Count > 0)
+                {
+                    response = new ResponseApi<List<AttendanceLogDto>>() { Status = true, Message = "Got All Attendance Logs", Value = logs };
+                }
+                else
+                {
+                    response = new ResponseApi<List<AttendanceLogDto>>() { Status = false, Message = "No data" };
+                }
+                return StatusCode(StatusCodes.Status200OK, response);
+            }
+            catch (Exception ex)
+            {
+                response = new ResponseApi<List<AttendanceLogDto>>() { Status = false, Message = ex.Message };
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
 
-            return Ok(logs);
         }
 
-        [HttpGet("{id}")]
-        [ProducesResponseType(200, Type = typeof(AttendanceLog))]
-        [ProducesResponseType(400)]
-        public IActionResult GetAttendanceLog(int id)
+        [Authorize]
+        [HttpGet("{employeeIdNumber}")]
+        public async Task<IActionResult> GetAttendanceLogs(string employeeIdNumber)
         {
-            if (!_attendanceLogRepository.AttendanceLogExists(id))
+
+            ResponseApi<List<AttendanceLogDto>> response;
+            try
             {
-                return NotFound();
+                List<AttendanceLogDto> logs = _mapper.Map<List<AttendanceLogDto>>(await _uow.attendanceLogRepository.GetAttendanceLogs(employeeIdNumber));
+
+                if (logs.Count > 0)
+                {
+                    response = new ResponseApi<List<AttendanceLogDto>>() { Status = true, Message = "Got All Attendance Logs", Value = logs };
+                }
+                else
+                {
+                    response = new ResponseApi<List<AttendanceLogDto>>() { Status = false, Message = "No data" };
+                }
+                return StatusCode(StatusCodes.Status200OK, response);
+            }
+            catch (Exception ex)
+            {
+                response = new ResponseApi<List<AttendanceLogDto>>() { Status = false, Message = ex.Message };
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
 
-            var log = _mapper.Map<AttendanceLogDto>(_attendanceLogRepository.GetAttendanceLog(id));
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            return Ok(log);
         }
+
 
         [HttpPost]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public IActionResult CreateAttendanceLog([FromQuery] int employeeId, [FromBody] AttendanceLogDto attendanceLogCreate)
+        public async Task<IActionResult> CreateAttendanceLog([FromBody] AttendanceLogDto request)
         {
-            if (attendanceLogCreate == null)
-                return BadRequest(ModelState);
-
-            var employee = _employeeRepository.GetEmployee(employeeId);
-
-            if (employee == null)
+            ResponseApi<AttendanceLogDto> response;
+            try
             {
-                ModelState.AddModelError("", "Employee does not exists");
-                return StatusCode(422, ModelState);
-            }
+                if (request.Base64String == "" || request.Base64String == null)
+                    request.ImageName = "default_image.jpg";
+                else
+                    request.ImageName = _uow.imageService.SaveImage(request.Base64String);
+                AttendanceLog log = _mapper.Map<AttendanceLog>(request);
+                log.Employee = await _uow.employeeRepository.GetEmployee(request.EmployeeIdNumber);
+                var requestTimeLog = DateTime.ParseExact(request.TimeLog, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                int logTypeId = _uow.attendanceLogTypeRepository.GetAttendanceLogType(requestTimeLog, log.Employee);
+                if (logTypeId == -1)
+                {
+                    response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = "You already logged two times today" };
+                }
+                else
+                {
+                    log.AttendanceLogType = await _uow.attendanceLogTypeRepository.GetAttendanceLogType(logTypeId);
 
-            if (_attendanceLogRepository.GetAttendanceLog(attendanceLogCreate.TimeLog, attendanceLogCreate.AttendanceLogType, employeeId) != null)
+                    AttendanceLog logCreated = await _uow.attendanceLogRepository.CreateAttendanceLog(log);
+
+                    if (logCreated.Id != 0)
+                    {
+                        response = new ResponseApi<AttendanceLogDto>() { Status = true, Message = "Attendance Log Created", Value = _mapper.Map<AttendanceLogDto>(logCreated) };
+                    }
+                    else
+                    {
+                        response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = "Could not create log" };
+                    }
+                }
+                return StatusCode(StatusCodes.Status200OK, response);
+            }
+            catch (Exception ex)
             {
-                ModelState.AddModelError("", "Log already exists");
-                return StatusCode(422, ModelState);
+                response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = ex.Message };
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var logMap = _mapper.Map<AttendanceLog>(attendanceLogCreate);
-            logMap.Employee = employee;
-
-            if (!_attendanceLogRepository.CreateAttendanceLog(logMap))
-            {
-                ModelState.AddModelError("", "Something went wrong while saving");
-                return StatusCode(500, ModelState);
-            }
-
-            return Ok("Successfully created");
         }
 
-        [HttpPut("{id}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult UpdateAttendanceLog(int id, [FromBody] AttendanceLogDto updatedAttendanceLog)
+        [Authorize]
+        [HttpPut]
+        public async Task<IActionResult> UpdateAttendanceLog([FromBody] AttendanceLogDto request)
         {
-            if (updatedAttendanceLog == null)
-                return BadRequest(ModelState);
 
-            if (id != updatedAttendanceLog.Id)
-                return BadRequest(ModelState);
-
-            if (!_attendanceLogRepository.AttendanceLogExists(id))
-                return NotFound();
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            var logMap = _mapper.Map<AttendanceLog>(updatedAttendanceLog);
-
-            if (!_attendanceLogRepository.UpdateAttendanceLog(logMap))
+            ResponseApi<AttendanceLogDto> response;
+            try
             {
-                ModelState.AddModelError("", "Something went wrong updating log");
-                return StatusCode(500, ModelState);
-            }
+                AttendanceLog oldlog = await _uow.attendanceLogRepository.GetAttendanceLog(request.Id);
+                request.ImageName= oldlog.ImageName;
+                _uow.attendanceLogRepository.DetachLog(oldlog);
+                //request.ImageName = _imageService.SaveImage(request.Base64String);
+                AttendanceLog log = _mapper.Map<AttendanceLog>(request);
+                //_imageService.DeleteImage(await _attendanceLogRepository.GetAttendanceLog(request.Id));
+                log.Employee = await _uow.employeeRepository.GetEmployee(request.EmployeeIdNumber);
+                log.AttendanceLogType = await _uow.attendanceLogTypeRepository.GetAttendanceLogType(request.AttendanceLogTypeName);
 
-            return Ok("Successfully updated");
+                AttendanceLog logEdited = await _uow.attendanceLogRepository.UpdateAttendanceLog(log);
+
+                response = new ResponseApi<AttendanceLogDto>() { Status = true, Message = "Attendance Log Updated", Value = _mapper.Map<AttendanceLogDto>(logEdited) };
+
+                return StatusCode(StatusCodes.Status200OK, response);
+            }
+            catch (Exception ex)
+            {
+                response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = ex.Message };
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult DeleteAttendanceLog(int id)
+        public async Task<IActionResult> DeleteAttendanceLog(int id)
         {
-            if (!_attendanceLogRepository.AttendanceLogExists(id))
+
+            ResponseApi<bool> response;
+            try
             {
-                return NotFound();
+
+                AttendanceLog log = await _uow.attendanceLogRepository.GetAttendanceLog(id);
+                if (log.ImageName != "default_image.jpg")
+                    _uow.imageService.DeleteImage(log);
+                bool deleted = await _uow.attendanceLogRepository.DeleteAttendanceLog(log);
+
+                if (deleted)
+                {
+                    response = new ResponseApi<bool>() { Status = true, Message = "Attendance Log Deleted" };
+                }
+                else
+                {
+                    response = new ResponseApi<bool>() { Status = true, Message = "Could not delete" };
+                }
+
+                return StatusCode(StatusCodes.Status200OK, response);
             }
-
-            var log = _attendanceLogRepository.GetAttendanceLog(id);
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (!_attendanceLogRepository.DeleteAttendanceLog(log))
+            catch (Exception ex)
             {
-                ModelState.AddModelError("", "Something went wrong deleting log");
+                response = new ResponseApi<bool>() { Status = false, Message = ex.Message };
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
-
-            return Ok("Successfully deleted");
         }
     }
 }

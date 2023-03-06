@@ -1,35 +1,30 @@
 ﻿using AttendaceManagementSystemWebAPI.Models;
 using System;
+using System.Security.Claims;
 
 namespace AttendaceManagementSystemWebAPI.Interfaces
 {
     public interface IEmployeeRepository
     {
-        ICollection<Employee> GetEmployees();
+        public Task<List<Employee>> GetEmployees();
 
-        ICollection<Employee> GetEmployeesByType(bool isAdmin);
+        public void DetachEmployee(Employee employee);
+        public Task<Employee> GetEmployee(int id);
 
-        Employee GetEmployee(int id);
+        public Task<Employee> GetEmployee(string employeeIdNumber);
 
-        Employee GetEmployee(string firstname, string lastname);
+        public Task<Employee> GetEmployeeByEmail(string email);
 
-        Employee GetEmployee(string firstname, string middlename, string lastname);
+        public Task<bool> EmployeeExists(string employeeIdNumber, string password);
 
-        Employee GetEmployee(string employeeId);
+        public Task<bool> EmployeeIdNumberExists(string employeeIdNumber);
 
+        public Task<bool> EmailAddressExists(string emailAddress);
 
-        bool EmployeeExists(int id);
+        public Task<Employee> CreateEmployee(Employee employee);
 
-        bool EmployeeExists(string firstname, string middlename, string lastname);
+        public Task<Employee> UpdateEmployee(Employee employee);
 
-        bool IsEmployeeAdmin(int id);
-
-        bool CreateEmployee(Employee employee);
-
-        bool UpdateEmployee(Employee employee);
-
-        bool DeleteEmployee(Employee employee);
-
-        bool Save();
+        public Task<bool> DeleteEmployee(Employee employee);
     }
 }

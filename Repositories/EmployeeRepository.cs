@@ -1,7 +1,15 @@
 ﻿using AttendaceManagementSystemWebAPI.Data;
 using AttendaceManagementSystemWebAPI.Interfaces;
 using AttendaceManagementSystemWebAPI.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Validations;
 using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace AttendaceManagementSystemWebAPI.Repositories
 {
@@ -9,81 +17,150 @@ namespace AttendaceManagementSystemWebAPI.Repositories
     {
         private readonly DataContext _context;
         public EmployeeRepository(DataContext context)
-        {
+        { 
             _context = context;
         }
 
-        public ICollection<Employee> GetEmployees()
+        public async Task<List<Employee>> GetEmployees()
         {
-            return _context.Employees.OrderBy(p => p.Id).ToList();
+            try
+            {
+                return await _context.Employees.OrderBy(p => p.Id).Include(p => p.AttendanceLogs).Include(p => p.EmployeeRole).ToListAsync();
+            }
+            catch(Exception )
+            {
+                throw ;
+            }
         }
 
-        public ICollection<Employee> GetEmployeesByType(bool isAdmin)
+        public async Task<Employee> GetEmployee(int id)
         {
-            return _context.Employees.Where(p => p.IsAdmin == isAdmin).ToList();
+            try
+            {
+                return await _context.Employees.Where(p => p.Id == id).Include(p => p.EmployeeRole).FirstOrDefaultAsync();
+            }
+            catch (Exception)
+            {
+                throw ;
+            }
         }
 
-        public Employee GetEmployee(int id)
+        public async Task<Employee> GetEmployee(string employeeIdNumber)
         {
-            return _context.Employees.Where(p => p.Id == id).FirstOrDefault();
+            try
+            {
+                return await _context.Employees.Where(p => p.EmployeeIdNumber.Trim() == employeeIdNumber.Trim()).Include(p => p.EmployeeRole).FirstOrDefaultAsync();
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
         }
 
-        public Employee GetEmployee(string firstname, string lastname)
+        public async Task<Employee> GetEmployeeByEmail(string email)
         {
-            return _context.Employees.Where(p => p.FirstName.Trim().ToUpper() == firstname.Trim().ToUpper() && p.LastName.Trim().ToUpper() == lastname.Trim().ToUpper()).FirstOrDefault();
-        }
-
-        public Employee GetEmployee(string firstname, string middlename, string lastname)
-        {
-            return _context.Employees.Where(p => p.FirstName.Trim().ToUpper() == firstname.Trim().ToUpper() && p.MiddleName.Trim().ToUpper() == middlename.Trim().ToUpper() && p.LastName.Trim().ToUpper() == lastname.Trim().ToUpper()).FirstOrDefault();
-        }
-
-        public Employee GetEmployee(string employeeId)
-        {
-            return _context.Employees.Where(p => p.EmployeeId == employeeId).FirstOrDefault();
+            try
+            {
+                return await _context.Employees.Where(p => p.EmailAddress.Trim() == email.Trim()).Include(p => p.EmployeeRole).FirstOrDefaultAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
 
-        public bool EmployeeExists(int id)
+        public async Task<bool> EmployeeExists(string employeeIdNumber, string password)
         {
-            return _context.Employees.Any(p => p.Id == id);
+            try
+            {
+                return await _context.Employees.AnyAsync(p => p.EmployeeIdNumber == employeeIdNumber.Trim() && p.Password == password.Trim());
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
         }
 
-        public bool EmployeeExists(string firstname, string middlename, string lastname)
+        public async Task<bool> EmployeeIdNumberExists(string employeeIdNumber)
         {
-            return _context.Employees.Any(p => p.FirstName.Trim().ToUpper() == firstname.Trim().ToUpper() && p.MiddleName.Trim().ToUpper() == middlename.Trim().ToUpper() && p.LastName.Trim().ToUpper() == lastname.Trim().ToUpper());
+            try
+            {
+                return await _context.Employees.AnyAsync(p => p.EmployeeIdNumber == employeeIdNumber.Trim());
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
         }
 
-        public bool IsEmployeeAdmin(int id)
+        public async Task<bool> EmailAddressExists(string emailAddress)
         {
-            return _context.Employees.Where(p => p.Id == id).FirstOrDefault().IsAdmin;
+            {
+                try
+                {
+                    return await _context.Employees.AnyAsync(p => p.EmailAddress == emailAddress.Trim());
+                }
+                catch (Exception )
+                {
+                    throw ;
+                }
+            }
         }
 
-        public bool CreateEmployee(Employee employee)
-        {
-            _context.Employees.Add(employee);
 
-            return Save();
+        public async Task<Employee> CreateEmployee(Employee employee)
+        {
+            try
+            {
+                await _context.Employees.AddAsync(employee);
+                await _context.SaveChangesAsync();
+                return employee;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        public bool UpdateEmployee(Employee employee)
+        public void DetachEmployee(Employee employee)
         {
-            _context.Update(employee);
-
-            return Save();
+            try
+            {
+                _context.Entry(employee).State = EntityState.Detached;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        public bool DeleteEmployee(Employee employee)
+        public async Task<Employee> UpdateEmployee(Employee employee)
         {
-            _context.Remove(employee);
-
-            return Save();
+            try
+            {
+                _context.Employees.Update(employee);
+                await _context.SaveChangesAsync();
+                return employee;
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
         }
 
-        public bool Save()
+        public async Task<bool> DeleteEmployee(Employee employee)
         {
-            var saved = _context.SaveChanges();
-            return saved > 0;
+            try
+            {
+                _context.Employees.Remove(employee);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
         }
     }
 }

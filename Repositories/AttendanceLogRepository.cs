@@ -1,6 +1,7 @@
 ﻿using AttendaceManagementSystemWebAPI.Data;
 using AttendaceManagementSystemWebAPI.Interfaces;
 using AttendaceManagementSystemWebAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AttendaceManagementSystemWebAPI.Repositories
 {
@@ -12,55 +13,97 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             _context = context;
         }
 
-        public ICollection<AttendanceLog> GetAttendaceLogs()
+
+        public async Task<List<AttendanceLog>> GetAttendanceLogs()
         {
-            return _context.AttendanceLogs.OrderBy(p => p.Id).ToList();
+            try
+            {
+                return await _context.AttendanceLogs.OrderBy(p => p.Id).Include(p => p.AttendanceLogType).Include(p => p.Employee).ToListAsync();
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
         }
 
-        public ICollection<AttendanceLog> GetAttendaceLogsByEmployee(int id)
+        public async Task<List<AttendanceLog>> GetAttendanceLogs(string employeeIdNumber)
         {
-            return _context.AttendanceLogs.Where(p => p.Employee.Id == id).ToList();
+            try
+            {
+                return await _context.AttendanceLogs.OrderBy(p => p.Id).Include(p => p.AttendanceLogType).Include(p => p.Employee).Where(p => p.Employee.EmployeeIdNumber == employeeIdNumber).ToListAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        public AttendanceLog GetAttendanceLog(int id)
+
+
+        public void DetachLog(AttendanceLog log)
         {
-            return _context.AttendanceLogs.Where(p => p.Id == id).FirstOrDefault();
+            try
+            {
+                _context.Entry(log).State = EntityState.Detached;
+            }
+            catch(Exception )
+            {
+                throw ;
+            }
         }
 
-        public AttendanceLog GetAttendanceLog(DateTime timeLog, string attendanceLogType, int employeeId)
+        public async Task<AttendanceLog> GetAttendanceLog(int id)
         {
-            return _context.AttendanceLogs.Where(p => p.TimeLog == timeLog && p.AttendanceLogType.Trim().ToUpper() == attendanceLogType.Trim().ToUpper() && p.Employee.Id == employeeId).FirstOrDefault();
-        }
-        public bool AttendanceLogExists(int id)
-        {
-            return _context.AttendanceLogs.Any(p => p.Id == id);
-        }
-
-        public bool CreateAttendanceLog(AttendanceLog attendanceLog)
-        {
-            _context.AttendanceLogs.Add(attendanceLog);
-
-            return Save();
+            try
+            {
+                return await _context.AttendanceLogs.Where(p => p.Id == id).Include(p => p.AttendanceLogType).Include(p => p.Employee).FirstOrDefaultAsync();
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
         }
 
-        public bool UpdateAttendanceLog(AttendanceLog attendanceLog)
+        public async Task<AttendanceLog> CreateAttendanceLog(AttendanceLog attendanceLog)
         {
-            _context.Update(attendanceLog);
-
-            return Save();
+            try
+            {
+                _context.AttendanceLogs.Add(attendanceLog);
+                await _context.SaveChangesAsync();
+                return attendanceLog;
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
         }
 
-        public bool DeleteAttendanceLog(AttendanceLog attendanceLog)
+        public async Task<AttendanceLog> UpdateAttendanceLog(AttendanceLog attendanceLog)
         {
-            _context.Remove(attendanceLog);
-
-            return Save();
+            try
+            {
+                _context.AttendanceLogs.Update(attendanceLog);
+                await _context.SaveChangesAsync();
+                return attendanceLog;
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
         }
 
-        public bool Save()
+        public async Task<bool> DeleteAttendanceLog(AttendanceLog attendanceLog)
         {
-            var saved = _context.SaveChanges();
-            return saved > 0;
+            try
+            {
+                _context.AttendanceLogs.Remove(attendanceLog);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
         }
     }
 }

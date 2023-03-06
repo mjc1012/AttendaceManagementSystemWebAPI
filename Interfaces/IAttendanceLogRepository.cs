@@ -4,22 +4,19 @@ namespace AttendaceManagementSystemWebAPI.Interfaces
 {
     public interface IAttendanceLogRepository
     {
-        ICollection<AttendanceLog> GetAttendaceLogs();
+        public Task<List<AttendanceLog>> GetAttendanceLogs();
+        public Task<List<AttendanceLog>> GetAttendanceLogs(string employeeIdNumber);
 
-        ICollection<AttendanceLog> GetAttendaceLogsByEmployee(int id);
+        public Task<AttendanceLog> GetAttendanceLog(int id);
 
-        AttendanceLog GetAttendanceLog(int id);
+        public void DetachLog(AttendanceLog log);
 
-        AttendanceLog GetAttendanceLog(DateTime timeLog, string attendanceLogType, int employeeId);
+        public Task<AttendanceLog> CreateAttendanceLog(AttendanceLog attendanceLog);
 
-        bool AttendanceLogExists(int id);
+        public Task<AttendanceLog> UpdateAttendanceLog(AttendanceLog attendanceLog);
 
-        bool CreateAttendanceLog(AttendanceLog attendanceLog);
+        public Task<bool> DeleteAttendanceLog(AttendanceLog attendanceLog);
 
-        bool UpdateAttendanceLog(AttendanceLog attendanceLog);
-
-        bool DeleteAttendanceLog(AttendanceLog attendanceLog);
-
-        bool Save();
+        //bool Save();
     }
 }
