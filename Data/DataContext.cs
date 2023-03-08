@@ -1,4 +1,5 @@
-﻿using AttendaceManagementSystemWebAPI.Models;
+﻿using AttendaceManagementSystemWebAPI.Helper;
+using AttendaceManagementSystemWebAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using System;
@@ -23,17 +24,45 @@ namespace AttendaceManagementSystemWebAPI.Data
                     Name = "TimeOut",
                 });
 
+            modelBuilder.Entity<AttendanceLogStatus>().HasData(
+               new AttendanceLogStatus
+               {
+                   Id = 1,
+                   Name = "Present",
+               },
+               new AttendanceLogStatus
+               {
+                   Id = 2,
+                   Name = "Absent",
+               });
+
             modelBuilder.Entity<EmployeeRole>().HasData(
-                new AttendanceLogType
+                new EmployeeRole
                 {
                     Id = 1,
                     Name = "Admin",
                 },
-                new AttendanceLogType
+                new EmployeeRole
                 {
                     Id = 2,
                     Name = "User",
                 });
+
+            modelBuilder.Entity<Employee>().HasData(
+               new Employee
+               {
+                   Id = 1,
+                   FirstName = "Admin",
+                   MiddleName = "",
+                   LastName = "Admin",
+                   EmailAddress = "Admin",
+                   EmployeeIdNumber = "Admin",
+                   ProfilePictureImageName = "default_image.jpg",
+                   Password = PasswordHasher.HashPassword("Admin@123"),
+                   EmployeeRoleId = 1
+               });
+
+
 
         }
 
@@ -44,5 +73,6 @@ namespace AttendaceManagementSystemWebAPI.Data
         public DbSet<AttendanceLog> AttendanceLogs { get; set; }
 
         public DbSet<AttendanceLogType> AttendanceLogTypes { get; set; }
+        public DbSet<AttendanceLogStatus> AttendanceLogStatuses { get; set; }
     }
 }

@@ -13,6 +13,8 @@ namespace AttendaceManagementSystemWebAPI.Dto
 
         public string AttendanceLogTypeName { get; set; }
 
+        public string AttendanceLogStatusName { get; set; }
+
         public string EmployeeIdNumber { get; set; }
 
         public string EmployeeName { get; set; }

@@ -29,11 +29,15 @@ namespace AttendaceManagementSystemWebAPI.Helper
             CreateMap<AttendanceLog, AttendanceLogDto>()
                 .ForMember(
                 destiny => destiny.TimeLog,
-                opt => opt.MapFrom(origin => origin.TimeLog.ToString("dd/MM/yyyy HH:mm:ss"))
+                opt => opt.MapFrom(origin => origin.TimeLog.ToString("yyyy-MM-dd HH:mm:ss"))
                 )
                 .ForMember(
                 destiny => destiny.AttendanceLogTypeName,
                 opt => opt.MapFrom(origin => origin.AttendanceLogType.Name)
+                )
+                 .ForMember(
+                destiny => destiny.AttendanceLogStatusName,
+                opt => opt.MapFrom(origin => origin.AttendanceLogStatus.Name)
                 )
                 .ForMember(
                 destiny => destiny.EmployeeIdNumber,
@@ -46,7 +50,7 @@ namespace AttendaceManagementSystemWebAPI.Helper
             CreateMap<AttendanceLogDto, AttendanceLog>()
                 .ForMember(
                 destiny => destiny.TimeLog,
-                opt => opt.MapFrom(origin => DateTime.ParseExact(origin.TimeLog, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture))
+                opt => opt.MapFrom(origin => DateTime.ParseExact(origin.TimeLog, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture))
                 )
                 .ForMember(
                 destiny => destiny.EmployeeId,
@@ -62,6 +66,14 @@ namespace AttendaceManagementSystemWebAPI.Helper
                 )
                 .ForMember(
                 destiny => destiny.AttendanceLogType,
+                opt => opt.Ignore()
+                )
+                .ForMember(
+                destiny => destiny.AttendanceLogStatusId,
+                opt => opt.Ignore()
+                )
+                .ForMember(
+                destiny => destiny.AttendanceLogStatus,
                 opt => opt.Ignore()
                 );
         }

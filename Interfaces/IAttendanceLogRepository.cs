@@ -13,6 +13,8 @@ namespace AttendaceManagementSystemWebAPI.Interfaces
 
         public Task<AttendanceLog> CreateAttendanceLog(AttendanceLog attendanceLog);
 
+        public Task CreateAttendanceLogVoid(AttendanceLog attendanceLog);
+
         public Task<AttendanceLog> UpdateAttendanceLog(AttendanceLog attendanceLog);
 
         public Task<bool> DeleteAttendanceLog(AttendanceLog attendanceLog);

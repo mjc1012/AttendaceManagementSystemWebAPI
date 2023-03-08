@@ -92,27 +92,42 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                     request.ImageName = _uow.imageService.SaveImage(request.Base64String);
                 AttendanceLog log = _mapper.Map<AttendanceLog>(request);
                 log.Employee = await _uow.employeeRepository.GetEmployee(request.EmployeeIdNumber);
-                var requestTimeLog = DateTime.ParseExact(request.TimeLog, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-                int logTypeId = _uow.attendanceLogTypeRepository.GetAttendanceLogType(requestTimeLog, log.Employee);
-                if (logTypeId == -1)
+                var requestTimeLog = DateTime.ParseExact(request.TimeLog, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                if(request.AttendanceLogTypeName == null || request.AttendanceLogTypeName == "")
                 {
-                    response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = "You already logged two times today" };
+                    int logTypeId = _uow.attendanceLogTypeRepository.GetAttendanceLogType(requestTimeLog, log.Employee);
+                    if (logTypeId == -1)
+                    {
+                        response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = "You already logged two times today" };
+                        return StatusCode(StatusCodes.Status200OK, response);
+                    }
+                    log.AttendanceLogType = await _uow.attendanceLogTypeRepository.GetAttendanceLogType(logTypeId);
                 }
                 else
                 {
-                    log.AttendanceLogType = await _uow.attendanceLogTypeRepository.GetAttendanceLogType(logTypeId);
-
-                    AttendanceLog logCreated = await _uow.attendanceLogRepository.CreateAttendanceLog(log);
-
-                    if (logCreated.Id != 0)
-                    {
-                        response = new ResponseApi<AttendanceLogDto>() { Status = true, Message = "Attendance Log Created", Value = _mapper.Map<AttendanceLogDto>(logCreated) };
-                    }
-                    else
-                    {
-                        response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = "Could not create log" };
-                    }
+                    log.AttendanceLogType = await _uow.attendanceLogTypeRepository.GetAttendanceLogType(request.AttendanceLogTypeName);
                 }
+
+                if (request.AttendanceLogStatusName == null || request.AttendanceLogStatusName == "")
+                {
+                    log.AttendanceLogStatus = await _uow.attendanceLogStatusRepository.GetAttendanceLogStatus(1);
+                }
+                else
+                {
+                    log.AttendanceLogStatus = await _uow.attendanceLogStatusRepository.GetAttendanceLogStatus(request.AttendanceLogStatusName);
+                }
+
+                AttendanceLog logCreated = await _uow.attendanceLogRepository.CreateAttendanceLog(log);
+
+                if (logCreated.Id != 0)
+                {
+                    response = new ResponseApi<AttendanceLogDto>() { Status = true, Message = "Attendance Log Created", Value = _mapper.Map<AttendanceLogDto>(logCreated) };
+                }
+                else
+                {
+                    response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = "Could not create log" };
+                }
+                
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
@@ -138,6 +153,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 //_imageService.DeleteImage(await _attendanceLogRepository.GetAttendanceLog(request.Id));
                 log.Employee = await _uow.employeeRepository.GetEmployee(request.EmployeeIdNumber);
                 log.AttendanceLogType = await _uow.attendanceLogTypeRepository.GetAttendanceLogType(request.AttendanceLogTypeName);
+                log.AttendanceLogStatus = await _uow.attendanceLogStatusRepository.GetAttendanceLogStatus(request.AttendanceLogStatusName);
 
                 AttendanceLog logEdited = await _uow.attendanceLogRepository.UpdateAttendanceLog(log);
 

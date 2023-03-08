@@ -1,6 +1,7 @@
 ﻿using AttendaceManagementSystemWebAPI.Data;
 using AttendaceManagementSystemWebAPI.Interfaces;
 using AttendaceManagementSystemWebAPI.Models;
+using MailKit.Search;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Validations;
@@ -30,6 +31,19 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             catch(Exception )
             {
                 throw ;
+            }
+        }
+
+        public List<Employee> GetEmployeesAbsentOnDate(DateTime date, int logTypeId)
+        {
+            try
+            {
+
+                return _context.Employees.Where(x => !x.AttendanceLogs.Any(p => p.TimeLog.Year == date.Year && p.TimeLog.Month == date.Month && p.TimeLog.Day == date.Day && p.AttendanceLogTypeId == logTypeId)).ToList();
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
 

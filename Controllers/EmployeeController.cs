@@ -7,7 +7,9 @@ using AttendaceManagementSystemWebAPI.Services;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
+using System.Globalization;
 using System.Security.Cryptography;
 
 namespace AttendaceManagementSystemWebAPI.Controllers
@@ -19,13 +21,11 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
         private readonly IConfiguration _config;
-        private readonly IEmailService _emailService;
-        public EmployeeController(IUnitOfWork uow, IMapper mapper, IConfiguration config, IEmailService emailService)
+        public EmployeeController(IUnitOfWork uow, IMapper mapper, IConfiguration config)
         {
             _uow = uow;
             _mapper = mapper;
             _config = config;
-            _emailService = emailService;
         }
 
         [HttpPost("authenticate")]
@@ -152,6 +152,60 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         }
 
         [Authorize]
+        [HttpGet("date/{date}")]
+        public async Task<IActionResult> RecordAbsencesOnDate(string date)
+        {
+            ResponseApi<bool> response;
+            try
+            {
+                List<Employee> employeesTimeInAbsent = _uow.employeeRepository.GetEmployeesAbsentOnDate(DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture), 1);
+                List<Employee> employeesTimeOutAbsent = _uow.employeeRepository.GetEmployeesAbsentOnDate(DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture), 2);
+
+                if(employeesTimeInAbsent.Count() > 0 || employeesTimeOutAbsent.Count() > 0)
+                {
+                    foreach (Employee employee in employeesTimeInAbsent)
+                    {
+                        await _uow.attendanceLogRepository.CreateAttendanceLogVoid(new AttendanceLog
+                        {
+                            TimeLog = DateTime.Now,
+                            ImageName = "default_image.jpg",
+                            AttendanceLogStatusId = 2,
+                            EmployeeId = employee.Id,
+                            AttendanceLogTypeId = 1
+                        });
+                    }
+
+                    foreach (Employee employee in employeesTimeOutAbsent)
+                    {
+                        await _uow.attendanceLogRepository.CreateAttendanceLogVoid(new AttendanceLog
+                        {
+                            TimeLog = DateTime.Now,
+                            ImageName = "default_image.jpg",
+                            AttendanceLogStatusId = 2,
+                            EmployeeId = employee.Id,
+                            AttendanceLogTypeId = 2
+                        });
+                    }
+
+                    response = new ResponseApi<bool>() { Status = true, Message = "Successfully Added Absences" };
+                }
+                else
+                {
+                    response = new ResponseApi<bool>() { Status = true, Message = "Everyone is Persent" };
+                }
+                
+
+                return StatusCode(StatusCodes.Status200OK, response);
+            }
+            catch (Exception ex)
+            {
+                response = new ResponseApi<bool>() { Status = false, Message = ex.Message };
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+
+        }
+
+        [Authorize]
         [HttpGet("{employeeIdNumber}")]
         public async Task<IActionResult> GetEmployee(string employeeIdNumber)
         {
@@ -199,7 +253,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 }
 
                 request.ProfilePictureImageName = "default_image.jpg";
-                request.Password = PasswordHasher.HashPassword(request.FirstName + "Alliance" + request.LastName + "@123");
+                request.Password = PasswordHasher.HashPassword(request.FirstName.Replace(" ", String.Empty) + "Alliance" + request.LastName + "@123");
                 Employee employee = _mapper.Map<Employee>(request);
                 employee.EmployeeRole = await _uow.employeeRoleRepository.GetEmployeeRole(request.EmployeeRoleName);
 
@@ -222,6 +276,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut]
         public async Task<IActionResult> UpdateEmployee([FromBody] EmployeeDto request)
         {
@@ -280,6 +335,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         }
 
 
+        [Authorize]
         [HttpPut("profile-pic")]
         public async Task<IActionResult> UpdateProfilePicture([FromForm] ImageFileDto request)
         {
@@ -351,7 +407,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                     employee.ResetPasswordExpiry = DateTime.Now.AddMinutes(15);
                     string from = _config["EmailSettings:From"];
                     var emailObj = new Email(email, "Reset Password", EmailBody.EmailStringBody(email, emailToken));
-                    _emailService.SendEmail(emailObj);
+                    _uow.emailService.SendEmail(emailObj);
                     _uow.employeeRepository.DetachEmployee(employee);
                     Employee employeeUpdated = await _uow.employeeRepository.UpdateEmployee(employee);
                     response = new ResponseApi<bool>() { Status = true, Message = "Email Sent" };

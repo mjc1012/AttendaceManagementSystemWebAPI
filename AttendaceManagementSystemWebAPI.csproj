@@ -27,7 +27,6 @@
 
   <ItemGroup>
     <Folder Include="Attendance Pictures\" />
-    <Folder Include="Utility\" />
     <Folder Include="Profile Pictures\" />
   </ItemGroup>
 

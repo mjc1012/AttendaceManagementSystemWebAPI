@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AttendaceManagementSystemWebAPI.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230302002847_addedRefreshToken")]
-    partial class addedRefreshToken
+    [Migration("20230307113036_initialcreate")]
+    partial class initialcreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -32,6 +32,9 @@ namespace AttendaceManagementSystemWebAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int>("AttendanceLogStatusId")
+                        .HasColumnType("int");
+
                     b.Property<int>("AttendanceLogTypeId")
                         .HasColumnType("int");
 
@@ -46,11 +49,41 @@ namespace AttendaceManagementSystemWebAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AttendanceLogStatusId");
+
                     b.HasIndex("AttendanceLogTypeId");
 
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("AttendanceLogs");
+                });
+
+            modelBuilder.Entity("AttendaceManagementSystemWebAPI.Models.AttendanceLogStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AttendanceLogStatuses");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Present"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Absent"
+                        });
                 });
 
             modelBuilder.Entity("AttendaceManagementSystemWebAPI.Models.AttendanceLogType", b =>
@@ -119,6 +152,12 @@ namespace AttendaceManagementSystemWebAPI.Migrations
                     b.Property<DateTime>("RefreshTokenExpiryTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime>("ResetPasswordExpiry")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ResetPasswordToken")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Token")
                         .HasColumnType("nvarchar(max)");
 
@@ -127,6 +166,22 @@ namespace AttendaceManagementSystemWebAPI.Migrations
                     b.HasIndex("EmployeeRoleId");
 
                     b.ToTable("Employees");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            EmailAddress = "Admin",
+                            EmployeeIdNumber = "Admin",
+                            EmployeeRoleId = 1,
+                            FirstName = "Admin",
+                            LastName = "Admin",
+                            MiddleName = "",
+                            Password = "jP3HS2dmsEns0YN7fCyg5g7M2S6rPlpq6MQjdHXuobA=",
+                            ProfilePictureImageName = "default_image.jpg",
+                            RefreshTokenExpiryTime = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ResetPasswordExpiry = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
                 });
 
             modelBuilder.Entity("AttendaceManagementSystemWebAPI.Models.EmployeeRole", b =>
@@ -159,6 +214,12 @@ namespace AttendaceManagementSystemWebAPI.Migrations
 
             modelBuilder.Entity("AttendaceManagementSystemWebAPI.Models.AttendanceLog", b =>
                 {
+                    b.HasOne("AttendaceManagementSystemWebAPI.Models.AttendanceLogStatus", "AttendanceLogStatus")
+                        .WithMany("AttendanceLogs")
+                        .HasForeignKey("AttendanceLogStatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("AttendaceManagementSystemWebAPI.Models.AttendanceLogType", "AttendanceLogType")
                         .WithMany("AttendanceLogs")
                         .HasForeignKey("AttendanceLogTypeId")
@@ -170,6 +231,8 @@ namespace AttendaceManagementSystemWebAPI.Migrations
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("AttendanceLogStatus");
 
                     b.Navigation("AttendanceLogType");
 
@@ -185,6 +248,11 @@ namespace AttendaceManagementSystemWebAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("EmployeeRole");
+                });
+
+            modelBuilder.Entity("AttendaceManagementSystemWebAPI.Models.AttendanceLogStatus", b =>
+                {
+                    b.Navigation("AttendanceLogs");
                 });
 
             modelBuilder.Entity("AttendaceManagementSystemWebAPI.Models.AttendanceLogType", b =>

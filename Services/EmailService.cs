@@ -18,7 +18,7 @@ namespace AttendaceManagementSystemWebAPI.Services
         {
             var emailMessage = new MimeMessage();
             var from = _config["EmailSettings:From"];
-            emailMessage.From.Add(new MailboxAddress("Lets Program", from));
+            emailMessage.From.Add(new MailboxAddress("Alliance", from));
             emailMessage.To.Add(new MailboxAddress(email.To, email.To));
             emailMessage.Subject = email.Subject;
             emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html)

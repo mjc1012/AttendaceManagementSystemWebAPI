@@ -20,7 +20,6 @@ namespace AttendaceManagementSystemWebAPI.Models
 
         public string Password { get; set; }
         public string Token { get; set; }
-        public int EmployeeRoleId { get; set; }
 
         public string RefreshToken { get; set; }
 
@@ -28,7 +27,8 @@ namespace AttendaceManagementSystemWebAPI.Models
 
         public string ResetPasswordToken { get; set; }
 
-        public DateTime ResetPasswordExpiry { get; set; }   
+        public DateTime ResetPasswordExpiry { get; set; }
+        public int EmployeeRoleId { get; set; }
 
         public virtual EmployeeRole EmployeeRole { get; set; }
 

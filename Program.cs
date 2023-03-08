@@ -20,6 +20,7 @@ builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IEmployeeRoleRepository, EmployeeRoleRepository>();
 builder.Services.AddScoped<IAttendanceLogRepository, AttendanceLogRepository>();
 builder.Services.AddScoped<IAttendanceLogTypeRepository, AttendanceLogTypeRepository>();
+builder.Services.AddScoped<IAttendanceLogStatusRepository, AttendanceLogStatusRepository>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
