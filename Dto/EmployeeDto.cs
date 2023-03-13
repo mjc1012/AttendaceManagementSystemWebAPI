@@ -17,12 +17,14 @@
         public string ProfilePictureImageName { get; set; }
         public string Password { get; set; }
 
-        public string Token { get; set; }
+        public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
 
         public DateTime RefreshTokenExpiryTime { get; set; }
 
         public IFormFile ImageFile { get; set; }
+
+        public bool ToDelete { get; set; }
 
     }
 }

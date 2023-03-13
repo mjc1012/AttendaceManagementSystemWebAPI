@@ -28,24 +28,24 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         public async Task<IActionResult> GetAttendanceLogs()
         {
 
-            ResponseApi<List<AttendanceLogDto>> response;
+            ResponseDto<List<AttendanceLogDto>> response;
             try
             {
                 List<AttendanceLogDto> logs = _mapper.Map<List<AttendanceLogDto>>(await _uow.attendanceLogRepository.GetAttendanceLogs());
 
                 if (logs.Count > 0)
                 {
-                    response = new ResponseApi<List<AttendanceLogDto>>() { Status = true, Message = "Got All Attendance Logs", Value = logs };
+                    response = new ResponseDto<List<AttendanceLogDto>>() { Status = true, Message = "Got All Attendance Logs", Value = logs };
                 }
                 else
                 {
-                    response = new ResponseApi<List<AttendanceLogDto>>() { Status = false, Message = "No data" };
+                    response = new ResponseDto<List<AttendanceLogDto>>() { Status = false, Message = "No data" };
                 }
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<List<AttendanceLogDto>>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<List<AttendanceLogDto>>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
 
@@ -56,24 +56,24 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         public async Task<IActionResult> GetAttendanceLogs(string employeeIdNumber)
         {
 
-            ResponseApi<List<AttendanceLogDto>> response;
+            ResponseDto<List<AttendanceLogDto>> response;
             try
             {
                 List<AttendanceLogDto> logs = _mapper.Map<List<AttendanceLogDto>>(await _uow.attendanceLogRepository.GetAttendanceLogs(employeeIdNumber));
 
                 if (logs.Count > 0)
                 {
-                    response = new ResponseApi<List<AttendanceLogDto>>() { Status = true, Message = "Got All Attendance Logs", Value = logs };
+                    response = new ResponseDto<List<AttendanceLogDto>>() { Status = true, Message = "Got All Attendance Logs", Value = logs };
                 }
                 else
                 {
-                    response = new ResponseApi<List<AttendanceLogDto>>() { Status = false, Message = "No data" };
+                    response = new ResponseDto<List<AttendanceLogDto>>() { Status = false, Message = "No data" };
                 }
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<List<AttendanceLogDto>>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<List<AttendanceLogDto>>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
 
@@ -83,7 +83,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAttendanceLog([FromBody] AttendanceLogDto request)
         {
-            ResponseApi<AttendanceLogDto> response;
+            ResponseDto<AttendanceLogDto> response;
             try
             {
                 if (request.Base64String == "" || request.Base64String == null)
@@ -98,7 +98,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                     int logTypeId = _uow.attendanceLogTypeRepository.GetAttendanceLogType(requestTimeLog, log.Employee);
                     if (logTypeId == -1)
                     {
-                        response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = "You already logged two times today" };
+                        response = new ResponseDto<AttendanceLogDto>() { Status = false, Message = "You already logged two times today" };
                         return StatusCode(StatusCodes.Status200OK, response);
                     }
                     log.AttendanceLogType = await _uow.attendanceLogTypeRepository.GetAttendanceLogType(logTypeId);
@@ -121,18 +121,18 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
                 if (logCreated.Id != 0)
                 {
-                    response = new ResponseApi<AttendanceLogDto>() { Status = true, Message = "Attendance Log Created", Value = _mapper.Map<AttendanceLogDto>(logCreated) };
+                    response = new ResponseDto<AttendanceLogDto>() { Status = true, Message = "Attendance Log Created", Value = _mapper.Map<AttendanceLogDto>(logCreated) };
                 }
                 else
                 {
-                    response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = "Could not create log" };
+                    response = new ResponseDto<AttendanceLogDto>() { Status = false, Message = "Could not create log" };
                 }
                 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<AttendanceLogDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -142,7 +142,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         public async Task<IActionResult> UpdateAttendanceLog([FromBody] AttendanceLogDto request)
         {
 
-            ResponseApi<AttendanceLogDto> response;
+            ResponseDto<AttendanceLogDto> response;
             try
             {
                 AttendanceLog oldlog = await _uow.attendanceLogRepository.GetAttendanceLog(request.Id);
@@ -157,13 +157,13 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
                 AttendanceLog logEdited = await _uow.attendanceLogRepository.UpdateAttendanceLog(log);
 
-                response = new ResponseApi<AttendanceLogDto>() { Status = true, Message = "Attendance Log Updated", Value = _mapper.Map<AttendanceLogDto>(logEdited) };
+                response = new ResponseDto<AttendanceLogDto>() { Status = true, Message = "Attendance Log Updated", Value = _mapper.Map<AttendanceLogDto>(logEdited) };
 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<AttendanceLogDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<AttendanceLogDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -173,7 +173,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         public async Task<IActionResult> DeleteAttendanceLog(int id)
         {
 
-            ResponseApi<bool> response;
+            ResponseDto<bool> response;
             try
             {
 
@@ -184,18 +184,18 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
                 if (deleted)
                 {
-                    response = new ResponseApi<bool>() { Status = true, Message = "Attendance Log Deleted" };
+                    response = new ResponseDto<bool>() { Status = true, Message = "Attendance Log Deleted" };
                 }
                 else
                 {
-                    response = new ResponseApi<bool>() { Status = true, Message = "Could not delete" };
+                    response = new ResponseDto<bool>() { Status = true, Message = "Could not delete" };
                 }
 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<bool>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<bool>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }

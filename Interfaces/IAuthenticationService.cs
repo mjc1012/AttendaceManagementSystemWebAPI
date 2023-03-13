@@ -3,7 +3,7 @@ using System.Security.Claims;
 
 namespace AttendaceManagementSystemWebAPI.Interfaces
 {
-    public interface IAuthenticationRepository
+    public interface IAuthenticationService
     {
         public ClaimsPrincipal GetPrincipalFromExpiredToken(string expiredToken);
         public Task<bool> EmployeeRefreshTokenExists(string refreshToken);

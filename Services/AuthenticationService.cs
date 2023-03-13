@@ -9,20 +9,20 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Text;
 
-namespace AttendaceManagementSystemWebAPI.Repositories
+namespace AttendaceManagementSystemWebAPI.Services
 {
-    public class AuthenticationRepository : IAuthenticationRepository
+    public class AuthenticationService : IAuthenticationService
     {
         private readonly DataContext _context;
-        public AuthenticationRepository(DataContext context)
+        public AuthenticationService(DataContext context)
         {
             _context = context;
         }
 
-        
+
         public string CheckPasswordStrength(string password)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             if (password.Length < 8)
             {
                 sb.Append("Minimum password length should be 8" + Environment.NewLine);
@@ -72,10 +72,8 @@ namespace AttendaceManagementSystemWebAPI.Repositories
                 ValidateLifetime = false
             };
             var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken securityToken;
-            var principal = tokenHandler.ValidateToken(expiredToken, tokenValidationParameters, out securityToken);
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            var principal = tokenHandler.ValidateToken(expiredToken, tokenValidationParameters, out SecurityToken securityToken);
+            if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new SecurityTokenException("This is an invalid token");
             }
@@ -91,9 +89,9 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             {
                 return await _context.Employees.AnyAsync(p => p.RefreshToken == refreshToken.Trim());
             }
-            catch (Exception )
+            catch (Exception)
             {
-                throw ;
+                throw;
             }
         }
 
@@ -115,7 +113,7 @@ namespace AttendaceManagementSystemWebAPI.Repositories
         {
             try
             {
-                employee.Token = accessToken;
+                employee.AccessToken = accessToken;
                 employee.RefreshToken = refreshToken;
                 await _context.SaveChangesAsync();
                 return employee;
@@ -130,7 +128,7 @@ namespace AttendaceManagementSystemWebAPI.Repositories
         {
             try
             {
-                employee.Token = accessToken;
+                employee.AccessToken = accessToken;
                 employee.RefreshToken = refreshToken;
                 employee.RefreshTokenExpiryTime = refreshTokenExpiryTime;
                 await _context.SaveChangesAsync();
@@ -141,6 +139,6 @@ namespace AttendaceManagementSystemWebAPI.Repositories
                 throw;
             }
         }
-       
+
     }
 }

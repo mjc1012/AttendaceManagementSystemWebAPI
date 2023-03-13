@@ -26,23 +26,21 @@ namespace AttendaceManagementSystemWebAPI.Services
                 Text = string.Format(email.Content)
             };
 
-            using(var client = new SmtpClient())
+            using var client = new SmtpClient();
+            try
             {
-                try
-                {
-                    client.Connect(_config["EmailSettings:SmtpServer"], 465, true);
-                    client.Authenticate(_config["EmailSettings:From"], _config["EmailSettings:Password"]);
-                    client.Send(emailMessage);
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
-                finally
-                {
-                    client.Disconnect(true);
-                    client.Dispose();
-                }
+                client.Connect(_config["EmailSettings:SmtpServer"], 465, true);
+                client.Authenticate(_config["EmailSettings:From"], _config["EmailSettings:Password"]);
+                client.Send(emailMessage);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                client.Disconnect(true);
+                client.Dispose();
             }
         }
     }

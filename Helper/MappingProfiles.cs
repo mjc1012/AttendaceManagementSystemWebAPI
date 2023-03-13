@@ -13,7 +13,12 @@ namespace AttendaceManagementSystemWebAPI.Helper
                 .ForMember(
                 destiny => destiny.EmployeeRoleName,
                 opt => opt.MapFrom(origin => origin.EmployeeRole.Name)
-                ).ForMember(
+                )
+                 .ForMember(
+                destiny => destiny.ToDelete,
+                opt => opt.Ignore()
+                )
+                 .ForMember(
                 destiny => destiny.ImageFile,
                 opt => opt.Ignore()
                 );

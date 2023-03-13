@@ -5,7 +5,7 @@
         IAttendanceLogRepository attendanceLogRepository { get; }
         IAttendanceLogTypeRepository attendanceLogTypeRepository { get; }
         IAttendanceLogStatusRepository attendanceLogStatusRepository { get; }
-        IAuthenticationRepository authenticationRepository { get; }
+        IAuthenticationService authenticationRepository { get; }
         IEmployeeRepository employeeRepository { get; }
         IEmployeeRoleRepository employeeRoleRepository { get; }
         IImageService imageService { get; }

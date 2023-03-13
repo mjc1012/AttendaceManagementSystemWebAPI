@@ -1,6 +1,6 @@
 ﻿namespace AttendaceManagementSystemWebAPI.Helper
 {
-    public class ResponseApi<T>
+    public class ResponseDto<T>
     {
         public bool Status { get; set; }
         public string Message { get; set; }

@@ -9,6 +9,8 @@ namespace AttendaceManagementSystemWebAPI.Interfaces
         public Task<List<Employee>> GetEmployees();
 
         public void DetachEmployee(Employee employee);
+
+        public Task<List<Employee>> GetEmployees(List<string> employeeIdNumbers);
         public Task<Employee> GetEmployee(int id);
         public List<Employee> GetEmployeesAbsentOnDate(DateTime date, int logTypeId);
 
@@ -27,5 +29,6 @@ namespace AttendaceManagementSystemWebAPI.Interfaces
         public Task<Employee> UpdateEmployee(Employee employee);
 
         public Task<bool> DeleteEmployee(Employee employee);
+        public Task<bool> DeleteEmployees(List<Employee> employee);
     }
 }

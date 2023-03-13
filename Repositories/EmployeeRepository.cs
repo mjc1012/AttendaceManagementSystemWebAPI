@@ -34,6 +34,18 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             }
         }
 
+        public async Task<List<Employee>> GetEmployees(List<string> employeeIdNumbers)
+        {
+            try
+            {
+                return await _context.Employees.Where(p => employeeIdNumbers.Contains(p.EmployeeIdNumber)).Include(p => p.AttendanceLogs).Include(p => p.EmployeeRole).ToListAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public List<Employee> GetEmployeesAbsentOnDate(DateTime date, int logTypeId)
         {
             try
@@ -174,6 +186,20 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             catch (Exception )
             {
                 throw ;
+            }
+        }
+
+        public async Task<bool> DeleteEmployees(List<Employee> employee)
+        {
+            try
+            {
+                _context.Employees.RemoveRange(employee);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
     }

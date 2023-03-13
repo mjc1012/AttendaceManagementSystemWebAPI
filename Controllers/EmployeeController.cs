@@ -31,14 +31,14 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpPost("authenticate")]
         public async Task<IActionResult> Authenticate([FromBody] EmployeeDto request)
         {
-            ResponseApi<TokenDto> response;
+            ResponseDto<TokenDto> response;
             try
             {
                 Employee employee = await _uow.employeeRepository.GetEmployee(request.EmployeeIdNumber);
 
                 if (employee == null || !PasswordHasher.VerifyPassword(request.Password, employee.Password))
                 {
-                    response = new ResponseApi<TokenDto>() { Status = false, Message = "User Not Found" };
+                    response = new ResponseDto<TokenDto>() { Status = false, Message = "User Not Found" };
                 }
                 else
                 {
@@ -46,18 +46,18 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                     string refreshToken = await _uow.authenticationRepository.CreateRefreshToken();
                     DateTime refreshTokenExpiryTime = DateTime.Now.AddDays(5);
                     Employee employeeWithToken = await _uow.authenticationRepository.saveTokens(employee, accessToken, refreshToken, refreshTokenExpiryTime);
-                    TokenDto token = new TokenDto() {
-                        AccessToken = employeeWithToken.Token,
+                    TokenDto token = new() {
+                        AccessToken = employeeWithToken.AccessToken,
                         RefreshToken = employeeWithToken.RefreshToken
                     };
-                    response = new ResponseApi<TokenDto>() { Status = true, Message = "User Found", Value = token };
+                    response = new ResponseDto<TokenDto>() { Status = true, Message = "User Found", Value = token };
                 }
 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<TokenDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<TokenDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -65,25 +65,25 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpPost("authenticate-for-attendance")]
         public async Task<IActionResult> AuthenticateForAttendance([FromBody] EmployeeDto request)
         {
-            ResponseApi<EmployeeDto> response;
+            ResponseDto<EmployeeDto> response;
             try
             {
                 Employee employee = await _uow.employeeRepository.GetEmployee(request.EmployeeIdNumber);
 
                 if (employee == null || !PasswordHasher.VerifyPassword(request.Password, employee.Password))
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = false, Message = "User Not Found" };
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = "User Not Found" };
                 }
                 else
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = true, Message = "User Found", Value = _mapper.Map<EmployeeDto>(employee) };
+                    response = new ResponseDto<EmployeeDto>() { Status = true, Message = "User Found", Value = _mapper.Map<EmployeeDto>(employee) };
                 }
 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<EmployeeDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<EmployeeDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -91,7 +91,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(TokenDto tokenDto)
         {
-            ResponseApi<TokenDto> response;
+            ResponseDto<TokenDto> response;
             try
             {
                 var principal = _uow.authenticationRepository.GetPrincipalFromExpiredToken(tokenDto.AccessToken);
@@ -99,26 +99,26 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 Employee employee = await _uow.employeeRepository.GetEmployee(idNumber);
                 if (employee == null || employee.RefreshToken != tokenDto.RefreshToken || employee.RefreshTokenExpiryTime <= DateTime.Now)
                 {
-                    response = new ResponseApi<TokenDto>() { Status = false, Message = "Invalid Request" };
+                    response = new ResponseDto<TokenDto>() { Status = false, Message = "Invalid Request" };
                 }
                 else
                 {
                     string newAccessToken = _uow.authenticationRepository.CreateJwt(employee);
                     string newRefreshToken = await _uow.authenticationRepository.CreateRefreshToken();
                     Employee employeeWithToken = await _uow.authenticationRepository.saveTokens(employee, newAccessToken, newRefreshToken);
-                    TokenDto token = new TokenDto()
+                    TokenDto token = new()
                     {
-                        AccessToken = employeeWithToken.Token,
+                        AccessToken = employeeWithToken.AccessToken,
                         RefreshToken = employeeWithToken.RefreshToken
                     };
-                    response = new ResponseApi<TokenDto>() { Status = true, Message = "User Found", Value = token };
+                    response = new ResponseDto<TokenDto>() { Status = true, Message = "User Found", Value = token };
                 }
 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<TokenDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<TokenDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -128,24 +128,24 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetEmployees()
         {
-            ResponseApi<List<EmployeeDto>> response;
+            ResponseDto<List<EmployeeDto>> response;
             try
             {
                 List<EmployeeDto> employees = _mapper.Map<List<EmployeeDto>>(await _uow.employeeRepository.GetEmployees());
 
                 if (employees.Count > 0)
                 {
-                    response = new ResponseApi<List<EmployeeDto>>() { Status = true, Message = "Got All Employees", Value = employees };
+                    response = new ResponseDto<List<EmployeeDto>>() { Status = true, Message = "Got All Employees", Value = employees };
                 }
                 else
                 {
-                    response = new ResponseApi<List<EmployeeDto>>() { Status = false, Message = "No data" };
+                    response = new ResponseDto<List<EmployeeDto>>() { Status = false, Message = "No data" };
                 }
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<List<EmployeeDto>>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<List<EmployeeDto>>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
 
@@ -155,13 +155,13 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpGet("date/{date}")]
         public async Task<IActionResult> RecordAbsencesOnDate(string date)
         {
-            ResponseApi<bool> response;
+            ResponseDto<bool> response;
             try
             {
                 List<Employee> employeesTimeInAbsent = _uow.employeeRepository.GetEmployeesAbsentOnDate(DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture), 1);
                 List<Employee> employeesTimeOutAbsent = _uow.employeeRepository.GetEmployeesAbsentOnDate(DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture), 2);
 
-                if(employeesTimeInAbsent.Count() > 0 || employeesTimeOutAbsent.Count() > 0)
+                if(employeesTimeInAbsent.Count > 0 || employeesTimeOutAbsent.Count > 0)
                 {
                     foreach (Employee employee in employeesTimeInAbsent)
                     {
@@ -187,11 +187,11 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                         });
                     }
 
-                    response = new ResponseApi<bool>() { Status = true, Message = "Successfully Added Absences" };
+                    response = new ResponseDto<bool>() { Status = true, Message = "Successfully Added Absences" };
                 }
                 else
                 {
-                    response = new ResponseApi<bool>() { Status = true, Message = "Everyone is Persent" };
+                    response = new ResponseDto<bool>() { Status = true, Message = "Everyone is Persent" };
                 }
                 
 
@@ -199,7 +199,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<bool>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<bool>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
 
@@ -209,24 +209,24 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpGet("{employeeIdNumber}")]
         public async Task<IActionResult> GetEmployee(string employeeIdNumber)
         {
-            ResponseApi<EmployeeDto> response;
+            ResponseDto<EmployeeDto> response;
             try
             {
                 EmployeeDto employees = _mapper.Map<EmployeeDto>(await _uow.employeeRepository.GetEmployee(employeeIdNumber));
 
                 if (employees != null)
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = true, Message = "Got Employee Data", Value = employees };
+                    response = new ResponseDto<EmployeeDto>() { Status = true, Message = "Got Employee Data", Value = employees };
                 }
                 else
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = false, Message = "No data" };
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = "No data" };
                 }
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<EmployeeDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<EmployeeDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -237,18 +237,18 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateEmployee([FromBody] EmployeeDto request)
         {
-            ResponseApi<EmployeeDto> response;
+            ResponseDto<EmployeeDto> response;
             try
             {
                 if (await _uow.employeeRepository.EmployeeIdNumberExists(request.EmployeeIdNumber))
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = false, Message = "Id Number Already Exist" };
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = "Id Number Already Exist" };
                     return StatusCode(StatusCodes.Status200OK, response);
                 }
 
                 if (await _uow.employeeRepository.EmailAddressExists(request.EmailAddress))
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = false, Message = "Email Address Already Exist" };
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = "Email Address Already Exist" };
                     return StatusCode(StatusCodes.Status200OK, response);
                 }
 
@@ -261,17 +261,17 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
                 if (employeeCreated.Id != 0)
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = true, Message = "Employee Created", Value = _mapper.Map<EmployeeDto>(employeeCreated) };
+                    response = new ResponseDto<EmployeeDto>() { Status = true, Message = "Employee Created", Value = _mapper.Map<EmployeeDto>(employeeCreated) };
                 }
                 else
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = false, Message = "Could not create Person" };
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = "Could not create Person" };
                 }
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<EmployeeDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<EmployeeDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -280,7 +280,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateEmployee([FromBody] EmployeeDto request)
         {
-            ResponseApi<EmployeeDto> response;
+            ResponseDto<EmployeeDto> response;
             try
             {
                 Employee oldEmployee = await _uow.employeeRepository.GetEmployee(request.Id);
@@ -293,13 +293,13 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 _uow.employeeRepository.DetachEmployee(oldEmployee);
                 Employee employeeEdited = await _uow.employeeRepository.UpdateEmployee(oldEmployee);
 
-                response = new ResponseApi<EmployeeDto>() { Status = true, Message = "Employee Updated", Value = _mapper.Map<EmployeeDto>(employeeEdited) };
+                response = new ResponseDto<EmployeeDto>() { Status = true, Message = "Employee Updated", Value = _mapper.Map<EmployeeDto>(employeeEdited) };
 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<EmployeeDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<EmployeeDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -308,13 +308,13 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpPut("password")]
         public async Task<IActionResult> UpdatePassword([FromBody] EmployeeDto request)
         {
-            ResponseApi<EmployeeDto> response;
+            ResponseDto<EmployeeDto> response;
             try
             {
                 string passwordError = _uow.authenticationRepository.CheckPasswordStrength(request.Password);
                 if (passwordError != "")
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = false, Message = passwordError };
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = passwordError };
                     return StatusCode(StatusCodes.Status200OK, response);
                 }
 
@@ -323,13 +323,13 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 _uow.employeeRepository.DetachEmployee(oldEmployee);
                 Employee employeeEdited = await _uow.employeeRepository.UpdateEmployee(oldEmployee);
 
-                response = new ResponseApi<EmployeeDto>() { Status = true, Message = "Password Updated", Value = _mapper.Map<EmployeeDto>(employeeEdited) };
+                response = new ResponseDto<EmployeeDto>() { Status = true, Message = "Password Updated", Value = _mapper.Map<EmployeeDto>(employeeEdited) };
 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<EmployeeDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<EmployeeDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -339,7 +339,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpPut("profile-pic")]
         public async Task<IActionResult> UpdateProfilePicture([FromForm] ImageFileDto request)
         {
-            ResponseApi<EmployeeDto> response;
+            ResponseDto<EmployeeDto> response;
             try
             {
                 Employee oldEmployee = await _uow.employeeRepository.GetEmployee(request.EmployeeIdNumber);
@@ -349,13 +349,13 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 _uow.employeeRepository.DetachEmployee(oldEmployee);
                 Employee employeeEdited = await _uow.employeeRepository.UpdateEmployee(oldEmployee);
 
-                response = new ResponseApi<EmployeeDto>() { Status = true, Message = "Profile Picture Updated", Value = _mapper.Map<EmployeeDto>(employeeEdited) };
+                response = new ResponseDto<EmployeeDto>() { Status = true, Message = "Profile Picture Updated", Value = _mapper.Map<EmployeeDto>(employeeEdited) };
 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<EmployeeDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<EmployeeDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -364,7 +364,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEmployee(int id)
         {
-            ResponseApi<bool> response;
+            ResponseDto<bool> response;
             try
             {
 
@@ -374,18 +374,47 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
                 if (deleted)
                 {
-                    response = new ResponseApi<bool>() { Status = true, Message = "Employee Deleted" };
+                    response = new ResponseDto<bool>() { Status = true, Message = "Employee Deleted" };
                 }
                 else
                 {
-                    response = new ResponseApi<bool>() { Status = false, Message = "Could not delete" };
+                    response = new ResponseDto<bool>() { Status = false, Message = "Could not delete" };
                 }
 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<bool>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<bool>() { Status = false, Message = ex.Message };
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        [Authorize]
+        [HttpPut("deleteEmployees")]
+        public async Task<IActionResult> DeleteEmployees([FromBody] DeleteRangeDto deleteRange)
+        {
+            ResponseDto<bool> response;
+            try
+            {
+
+                List<Employee> employees = _mapper.Map<List<Employee>>(await _uow.employeeRepository.GetEmployees(deleteRange.IdNumbers));
+                bool deleted = await _uow.employeeRepository.DeleteEmployees(employees);
+
+                if (deleted)
+                {
+                    response = new ResponseDto<bool>() { Status = true, Message = "Employee Deleted" };
+                }
+                else
+                {
+                    response = new ResponseDto<bool>() { Status = false, Message = "Could not delete" };
+                }
+
+                return StatusCode(StatusCodes.Status200OK, response);
+            }
+            catch (Exception ex)
+            {
+                response = new ResponseDto<bool>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -393,7 +422,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpPost("send-reset-email/{email}")]
         public async Task<IActionResult> SendEmail(string email)
         {
-            ResponseApi<bool> response;
+            ResponseDto<bool> response;
             try
             {
 
@@ -410,18 +439,18 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                     _uow.emailService.SendEmail(emailObj);
                     _uow.employeeRepository.DetachEmployee(employee);
                     Employee employeeUpdated = await _uow.employeeRepository.UpdateEmployee(employee);
-                    response = new ResponseApi<bool>() { Status = true, Message = "Email Sent" };
+                    response = new ResponseDto<bool>() { Status = true, Message = "Email Sent" };
                 }
                 else
                 {
-                    response = new ResponseApi<bool>() { Status = false, Message = "Email Does not Exist" };
+                    response = new ResponseDto<bool>() { Status = false, Message = "Email Does not Exist" };
                 }
 
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<bool>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<bool>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
@@ -429,14 +458,14 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         [HttpPut("reset-password")]
         public async Task<IActionResult> ResetPasssword([FromBody] ResetPasswordDto request)
         {
-            ResponseApi<EmployeeDto> response;
+            ResponseDto<EmployeeDto> response;
             try
             {
                 var newToken = request.EmailToken.Replace(" ", "+");
                 string passwordError = _uow.authenticationRepository.CheckPasswordStrength(request.NewPassword);
                 if (passwordError != "")
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = false, Message = passwordError };
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = passwordError };
                     return StatusCode(StatusCodes.Status200OK, response);
                 }
                 Employee oldEmployee = await _uow.employeeRepository.GetEmployeeByEmail(request.Email);
@@ -445,7 +474,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
                 if (oldEmployee == null || tokenCode != newToken || emailTokenExpiry < DateTime.Now)
                 {
-                    response = new ResponseApi<EmployeeDto>() { Status = false, Message = "Invalid Request" };
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = "Invalid Request" };
                 }
                 else
                 {
@@ -453,7 +482,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                     _uow.employeeRepository.DetachEmployee(oldEmployee);
                     Employee employeeEdited = await _uow.employeeRepository.UpdateEmployee(oldEmployee);
 
-                    response = new ResponseApi<EmployeeDto>() { Status = true, Message = "Password Reset is Successful", Value = _mapper.Map<EmployeeDto>(employeeEdited) };
+                    response = new ResponseDto<EmployeeDto>() { Status = true, Message = "Password Reset is Successful", Value = _mapper.Map<EmployeeDto>(employeeEdited) };
                 }
 
                 
@@ -462,7 +491,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                response = new ResponseApi<EmployeeDto>() { Status = false, Message = ex.Message };
+                response = new ResponseDto<EmployeeDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
         }
