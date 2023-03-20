@@ -27,5 +27,7 @@ namespace AttendaceManagementSystemWebAPI.Services
         public IAttendanceLogStatusRepository attendanceLogStatusRepository => new AttendanceLogStatusRepository(_context);
 
         public IEmailService emailService => new EmailService(_config);
+
+        public IAttendanceLogStateRepository attendanceLogStateRepository => new AttendanceLogStateRepository(_context);
     }
 }

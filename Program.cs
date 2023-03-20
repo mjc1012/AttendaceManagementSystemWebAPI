@@ -16,13 +16,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 //builder.Services.AddTransient<Seed>();
-builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
-builder.Services.AddScoped<IEmployeeRoleRepository, EmployeeRoleRepository>();
-builder.Services.AddScoped<IAttendanceLogRepository, AttendanceLogRepository>();
-builder.Services.AddScoped<IAttendanceLogTypeRepository, AttendanceLogTypeRepository>();
-builder.Services.AddScoped<IAttendanceLogStatusRepository, AttendanceLogStatusRepository>();
-builder.Services.AddScoped<IImageService, ImageService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(MappingProfiles));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

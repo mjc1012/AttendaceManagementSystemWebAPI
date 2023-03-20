@@ -45,7 +45,7 @@ namespace AttendaceManagementSystemWebAPI.Services
             var identity = new ClaimsIdentity(new Claim[]
             {
                 new Claim(ClaimTypes.Role, employee.EmployeeRole.Name),
-                new Claim(ClaimTypes.Name, employee.EmployeeIdNumber)
+                new Claim(ClaimTypes.Name, employee.PairId)
             });
 
             var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
@@ -98,7 +98,7 @@ namespace AttendaceManagementSystemWebAPI.Services
         public async Task<string> CreateRefreshToken()
         {
             var tokenBytes = RandomNumberGenerator.GetBytes(64);
-            var refreshToken = Convert.ToBase64String(tokenBytes);
+            var refreshToken = Convert.ToBase64String(tokenBytes).Replace("/", "!").Replace("\\", "!");
 
             var tokenInUser = await EmployeeRefreshTokenExists(refreshToken);
 

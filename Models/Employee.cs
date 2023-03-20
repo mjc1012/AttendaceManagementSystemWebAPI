@@ -16,6 +16,8 @@ namespace AttendaceManagementSystemWebAPI.Models
         public string EmailAddress { get; set; }
 
         public string EmployeeIdNumber { get; set; }
+
+        public string PairId { get; set; }
         public string ProfilePictureImageName { get; set; }
 
         public string Password { get; set; }

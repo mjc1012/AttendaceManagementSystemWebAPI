@@ -44,13 +44,33 @@ namespace AttendaceManagementSystemWebAPI.Helper
                 destiny => destiny.AttendanceLogStatusName,
                 opt => opt.MapFrom(origin => origin.AttendanceLogStatus.Name)
                 )
+                  .ForMember(
+                destiny => destiny.AttendanceLogStateName,
+                opt => opt.MapFrom(origin => origin.AttendanceLogState.Name)
+                )
                 .ForMember(
                 destiny => destiny.EmployeeIdNumber,
                 opt => opt.MapFrom(origin => origin.Employee.EmployeeIdNumber)
                 )
                  .ForMember(
-                destiny => destiny.EmployeeName,
-                opt => opt.MapFrom(origin => (origin.Employee.FirstName + " " + origin.Employee.LastName))
+                destiny => destiny.PairId,
+                opt => opt.MapFrom(origin => origin.Employee.PairId)
+                )
+                 .ForMember(
+                destiny => destiny.FirstName,
+                opt => opt.MapFrom(origin => origin.Employee.FirstName)
+                )
+                 .ForMember(
+                destiny => destiny.MiddleName,
+                opt => opt.MapFrom(origin => origin.Employee.MiddleName)
+                )
+                 .ForMember(
+                destiny => destiny.LastName,
+                opt => opt.MapFrom(origin => origin.Employee.LastName)
+                )
+                  .ForMember(
+                destiny => destiny.ToDelete,
+                opt => opt.Ignore()
                 );
             CreateMap<AttendanceLogDto, AttendanceLog>()
                 .ForMember(

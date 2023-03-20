@@ -18,7 +18,7 @@ namespace AttendaceManagementSystemWebAPI.Repositories
         {
             try
             {
-                return await _context.AttendanceLogs.OrderBy(p => p.Id).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.Employee).ToListAsync();
+                return await _context.AttendanceLogs.OrderByDescending(p => p.TimeLog).ThenBy(p => p.Employee.LastName).ThenBy(p => p.Employee.MiddleName).ThenBy(p => p.Employee.FirstName).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.AttendanceLogState).Include(p => p.Employee).ToListAsync();
             }
             catch (Exception )
             {
@@ -26,11 +26,23 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             }
         }
 
-        public async Task<List<AttendanceLog>> GetAttendanceLogs(DateTime startDate, DateTime endDate)
+        public async Task<List<AttendanceLog>> GetAttendanceLogs(List<string> ids)
         {
             try
             {
-                return await _context.AttendanceLogs.Where(p => p.TimeLog >= startDate && p.TimeLog <= endDate).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.Employee).ToListAsync();
+                return await _context.AttendanceLogs.Where(p => ids.Contains(p.Id.ToString())).OrderByDescending(p => p.TimeLog).ThenBy(p => p.Employee.LastName).ThenBy(p => p.Employee.MiddleName).ThenBy(p => p.Employee.FirstName).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.AttendanceLogState).Include(p => p.Employee).ToListAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+            public async Task<List<AttendanceLog>> GetAttendanceLogs(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                return await _context.AttendanceLogs.Where(p => p.TimeLog >= startDate && p.TimeLog <= endDate).OrderByDescending(p => p.TimeLog).ThenBy(p => p.Employee.LastName).ThenBy(p => p.Employee.MiddleName).ThenBy(p => p.Employee.FirstName).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogState).Include(p => p.AttendanceLogStatus).Include(p => p.Employee).ToListAsync();
             }
             catch (Exception)
             {
@@ -42,7 +54,7 @@ namespace AttendaceManagementSystemWebAPI.Repositories
         {
             try
             {
-                return await _context.AttendanceLogs.Where(p => p.TimeLog >= startDate && p.TimeLog <= endDate && p.AttendanceLogTypeId == attendaceLogTypeId).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.Employee).ToListAsync();
+                return await _context.AttendanceLogs.Where(p => p.TimeLog >= startDate && p.TimeLog <= endDate && p.AttendanceLogTypeId == attendaceLogTypeId).OrderByDescending(p => p.TimeLog).ThenBy(p => p.Employee.LastName).ThenBy(p => p.Employee.MiddleName).ThenBy(p => p.Employee.FirstName).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.AttendanceLogState).Include(p => p.Employee).ToListAsync();
             }
             catch (Exception)
             {
@@ -50,11 +62,11 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             }
         }
 
-        public async Task<List<AttendanceLog>> GetAttendanceLogs(string employeeIdNumber)
+        public async Task<List<AttendanceLog>> GetAttendanceLogs(string pairId)
         {
             try
             {
-                return await _context.AttendanceLogs.OrderBy(p => p.Id).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.Employee).Where(p => p.Employee.EmployeeIdNumber == employeeIdNumber).ToListAsync();
+                return await _context.AttendanceLogs.Where(p => p.Employee.PairId == pairId).OrderByDescending(p => p.TimeLog).ThenBy(p => p.Employee.LastName).ThenBy(p => p.Employee.MiddleName).ThenBy(p => p.Employee.FirstName).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.AttendanceLogState).Include(p => p.Employee).ToListAsync();
             }
             catch (Exception)
             {
@@ -80,7 +92,7 @@ namespace AttendaceManagementSystemWebAPI.Repositories
         {
             try
             {
-                return await _context.AttendanceLogs.Where(p => p.Id == id).Include(p => p.AttendanceLogType).Include(p => p.Employee).FirstOrDefaultAsync();
+                return await _context.AttendanceLogs.Where(p => p.Id == id).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogState).Include(p => p.AttendanceLogStatus).Include(p => p.Employee).FirstOrDefaultAsync();
             }
             catch (Exception )
             {
@@ -139,6 +151,20 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             catch (Exception )
             {
                 throw ;
+            }
+        }
+
+        public async Task<bool> DeleteAttendanceLogs(List<AttendanceLog> logs)
+        {
+            try
+            {
+                _context.AttendanceLogs.RemoveRange(logs);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
     }

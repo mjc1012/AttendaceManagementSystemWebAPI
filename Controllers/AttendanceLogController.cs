@@ -52,18 +52,18 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("{employeeIdNumber}")]
-        public async Task<IActionResult> GetAttendanceLogs(string employeeIdNumber)
+        [HttpGet("{pairId}")]
+        public async Task<IActionResult> GetAttendanceLogs(string pairId)
         {
 
             ResponseDto<List<AttendanceLogDto>> response;
             try
             {
-                List<AttendanceLogDto> logs = _mapper.Map<List<AttendanceLogDto>>(await _uow.attendanceLogRepository.GetAttendanceLogs(employeeIdNumber));
+                List<AttendanceLogDto> logs = _mapper.Map<List<AttendanceLogDto>>(await _uow.attendanceLogRepository.GetAttendanceLogs(pairId));
 
                 if (logs.Count > 0)
                 {
-                    response = new ResponseDto<List<AttendanceLogDto>>() { Status = true, Message = "Got All Attendance Logs", Value = logs };
+                    response = new ResponseDto<List<AttendanceLogDto>>() { Status = true, Message = "Got Attendance Logs", Value = logs };
                 }
                 else
                 {
@@ -91,9 +91,16 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 else
                     request.ImageName = _uow.imageService.SaveImage(request.Base64String);
                 AttendanceLog log = _mapper.Map<AttendanceLog>(request);
-                log.Employee = await _uow.employeeRepository.GetEmployee(request.EmployeeIdNumber);
-                var requestTimeLog = DateTime.ParseExact(request.TimeLog, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-                if(request.AttendanceLogTypeName == null || request.AttendanceLogTypeName == "")
+                if (request.PairId == null || request.PairId == "")
+                {
+                    log.Employee = await _uow.employeeRepository.GetEmployeeByEmployeeIdNumber(request.EmployeeIdNumber);
+                }
+                else
+                {
+                    log.Employee = await _uow.employeeRepository.GetEmployeeByPairId(request.PairId);
+                }
+                DateTime requestTimeLog = DateTime.ParseExact(request.TimeLog, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                if (request.AttendanceLogTypeName == null || request.AttendanceLogTypeName == "")
                 {
                     int logTypeId = _uow.attendanceLogTypeRepository.GetAttendanceLogType(requestTimeLog, log.Employee);
                     if (logTypeId == -1)
@@ -117,6 +124,23 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                     log.AttendanceLogStatus = await _uow.attendanceLogStatusRepository.GetAttendanceLogStatus(request.AttendanceLogStatusName);
                 }
 
+                if (log.AttendanceLogStatus.Id == 1)
+                {
+                    if ((TimeSpan.Compare(requestTimeLog.TimeOfDay, new TimeSpan(9, 0, 0)) == 1 && log.AttendanceLogType.Id == 1) || (TimeSpan.Compare(requestTimeLog.TimeOfDay, new TimeSpan(18, 0, 0)) == 1 && log.AttendanceLogType.Id == 2))
+                    {
+                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(2);
+                    }
+                    else
+                    {
+                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(1);
+                    }
+                }
+                else
+                {
+                    log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(3);
+                }
+
+
                 AttendanceLog logCreated = await _uow.attendanceLogRepository.CreateAttendanceLog(log);
 
                 if (logCreated.Id != 0)
@@ -125,9 +149,9 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 }
                 else
                 {
-                    response = new ResponseDto<AttendanceLogDto>() { Status = false, Message = "Could not create log" };
+                    response = new ResponseDto<AttendanceLogDto>() { Status = false, Message = "Attendance Log Not Created" };
                 }
-                
+
                 return StatusCode(StatusCodes.Status200OK, response);
             }
             catch (Exception ex)
@@ -135,6 +159,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 response = new ResponseDto<AttendanceLogDto>() { Status = false, Message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, response);
             }
+           
         }
 
         [Authorize]
@@ -147,13 +172,28 @@ namespace AttendaceManagementSystemWebAPI.Controllers
             {
                 AttendanceLog oldlog = await _uow.attendanceLogRepository.GetAttendanceLog(request.Id);
                 request.ImageName= oldlog.ImageName;
+                request.Id = oldlog.Id;
                 _uow.attendanceLogRepository.DetachLog(oldlog);
-                //request.ImageName = _imageService.SaveImage(request.Base64String);
                 AttendanceLog log = _mapper.Map<AttendanceLog>(request);
-                //_imageService.DeleteImage(await _attendanceLogRepository.GetAttendanceLog(request.Id));
-                log.Employee = await _uow.employeeRepository.GetEmployee(request.EmployeeIdNumber);
+                log.Employee = await _uow.employeeRepository.GetEmployeeByEmployeeIdNumber(request.EmployeeIdNumber);
                 log.AttendanceLogType = await _uow.attendanceLogTypeRepository.GetAttendanceLogType(request.AttendanceLogTypeName);
                 log.AttendanceLogStatus = await _uow.attendanceLogStatusRepository.GetAttendanceLogStatus(request.AttendanceLogStatusName);
+
+                if (log.AttendanceLogStatus.Id == 1)
+                {
+                    if ((TimeSpan.Compare(log.TimeLog.TimeOfDay, new TimeSpan(9, 0, 0)) == 1 && log.AttendanceLogType.Id == 1) || (TimeSpan.Compare(log.TimeLog.TimeOfDay, new TimeSpan(18, 0, 0)) == 1 && log.AttendanceLogType.Id == 2))
+                    {
+                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(2);
+                    }
+                    else
+                    {
+                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(1);
+                    }
+                }
+                else
+                {
+                    log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(3);
+                }
 
                 AttendanceLog logEdited = await _uow.attendanceLogRepository.UpdateAttendanceLog(log);
 
@@ -168,7 +208,6 @@ namespace AttendaceManagementSystemWebAPI.Controllers
             }
         }
 
-        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAttendanceLog(int id)
         {
@@ -188,7 +227,36 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 }
                 else
                 {
-                    response = new ResponseDto<bool>() { Status = true, Message = "Could not delete" };
+                    response = new ResponseDto<bool>() { Status = true, Message = "Attendance Log Not Deleted" };
+                }
+
+                return StatusCode(StatusCodes.Status200OK, response);
+            }
+            catch (Exception ex)
+            {
+                response = new ResponseDto<bool>() { Status = false, Message = ex.Message };
+                return StatusCode(StatusCodes.Status500InternalServerError, response);
+            }
+        }
+
+        [Authorize]
+        [HttpPut("delete-logs")]
+        public async Task<IActionResult> DeleteEmployees([FromBody] DeleteRangeDto deleteRange)
+        {
+            ResponseDto<bool> response;
+            try
+            {
+
+                List<AttendanceLog> logs = _mapper.Map<List<AttendanceLog>>(await _uow.attendanceLogRepository.GetAttendanceLogs(deleteRange.Ids));
+                bool deleted = await _uow.attendanceLogRepository.DeleteAttendanceLogs(logs);
+
+                if (deleted)
+                {
+                    response = new ResponseDto<bool>() { Status = true, Message = "Attendance Logs Deleted" };
+                }
+                else
+                {
+                    response = new ResponseDto<bool>() { Status = false, Message = "Attendance Logs Not Deleted" };
                 }
 
                 return StatusCode(StatusCodes.Status200OK, response);

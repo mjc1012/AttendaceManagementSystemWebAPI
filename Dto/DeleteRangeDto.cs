@@ -4,6 +4,6 @@ namespace AttendaceManagementSystemWebAPI.Dto
 {
     public class DeleteRangeDto
     {
-        public List<string> IdNumbers { get; set; }
+        public List<string> Ids { get; set; }
     }
 }

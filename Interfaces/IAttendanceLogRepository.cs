@@ -5,7 +5,12 @@ namespace AttendaceManagementSystemWebAPI.Interfaces
     public interface IAttendanceLogRepository
     {
         public Task<List<AttendanceLog>> GetAttendanceLogs();
-        public Task<List<AttendanceLog>> GetAttendanceLogs(string employeeIdNumber);
+        public Task<List<AttendanceLog>> GetAttendanceLogs(string pairId);
+
+
+
+        public Task<List<AttendanceLog>> GetAttendanceLogs(List<string> ids);
+
 
         public Task<AttendanceLog> GetAttendanceLog(int id);
 
@@ -19,6 +24,8 @@ namespace AttendaceManagementSystemWebAPI.Interfaces
 
         public Task<bool> DeleteAttendanceLog(AttendanceLog attendanceLog);
 
-        //bool Save();
+        public Task<bool> DeleteAttendanceLogs(List<AttendanceLog> logs);
+
+
     }
 }

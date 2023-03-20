@@ -19,6 +19,10 @@ namespace AttendaceManagementSystemWebAPI.Models
 
         public virtual AttendanceLogStatus AttendanceLogStatus { get; set; }
 
+        public int AttendanceLogStateId { get; set; }
+
+        public virtual AttendanceLogState AttendanceLogState { get; set; }
+
         public int EmployeeId { get; set; }
 
         public virtual Employee Employee { get; set; }

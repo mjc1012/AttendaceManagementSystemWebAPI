@@ -24,6 +24,23 @@ namespace AttendaceManagementSystemWebAPI.Data
                     Name = "TimeOut",
                 });
 
+            modelBuilder.Entity<AttendanceLogState>().HasData(
+                new AttendanceLogState
+                {
+                    Id = 1,
+                    Name = "Early",
+                },
+                new AttendanceLogState
+                {
+                    Id = 2,
+                    Name = "Late",
+                },
+                 new AttendanceLogState
+                 {
+                     Id = 3,
+                     Name = "N/A",
+                 });
+
             modelBuilder.Entity<AttendanceLogStatus>().HasData(
                new AttendanceLogStatus
                {
@@ -57,6 +74,7 @@ namespace AttendaceManagementSystemWebAPI.Data
                    LastName = "Admin",
                    EmailAddress = "Admin",
                    EmployeeIdNumber = "Admin",
+                   PairId = "1234",
                    ProfilePictureImageName = "default_image.jpg",
                    Password = PasswordHasher.HashPassword("Admin@123"),
                    EmployeeRoleId = 1
@@ -74,5 +92,7 @@ namespace AttendaceManagementSystemWebAPI.Data
 
         public DbSet<AttendanceLogType> AttendanceLogTypes { get; set; }
         public DbSet<AttendanceLogStatus> AttendanceLogStatuses { get; set; }
+
+        public DbSet<AttendanceLogState> AttendanceLogStates { get; set; }
     }
 }

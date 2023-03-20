@@ -26,7 +26,7 @@ namespace AttendaceManagementSystemWebAPI.Repositories
         {
             try
             {
-                return await _context.Employees.OrderBy(p => p.Id).Include(p => p.AttendanceLogs).Include(p => p.EmployeeRole).ToListAsync();
+                return await _context.Employees.OrderBy(p => p.LastName).ThenBy(p => p.MiddleName).ThenBy(p => p.FirstName).Include(p => p.AttendanceLogs).Include(p => p.EmployeeRole).ToListAsync();
             }
             catch(Exception )
             {
@@ -34,11 +34,11 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             }
         }
 
-        public async Task<List<Employee>> GetEmployees(List<string> employeeIdNumbers)
+        public async Task<List<Employee>> GetEmployees(List<string> pairIds)
         {
             try
             {
-                return await _context.Employees.Where(p => employeeIdNumbers.Contains(p.EmployeeIdNumber)).Include(p => p.AttendanceLogs).Include(p => p.EmployeeRole).ToListAsync();
+                return await _context.Employees.Where(p => pairIds.Contains(p.PairId)).ToListAsync();
             }
             catch (Exception)
             {
@@ -71,15 +71,27 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             }
         }
 
-        public async Task<Employee> GetEmployee(string employeeIdNumber)
+        public async Task<Employee> GetEmployeeByPairId(string pairId)
+        {
+            try
+            {
+                return await _context.Employees.Where(p => p.PairId.Trim() == pairId.Trim()).Include(p => p.EmployeeRole).FirstOrDefaultAsync();
+            }
+            catch (Exception )
+            {
+                throw ;
+            }
+        }
+
+        public async Task<Employee> GetEmployeeByEmployeeIdNumber(string employeeIdNumber)
         {
             try
             {
                 return await _context.Employees.Where(p => p.EmployeeIdNumber.Trim() == employeeIdNumber.Trim()).Include(p => p.EmployeeRole).FirstOrDefaultAsync();
             }
-            catch (Exception )
+            catch (Exception)
             {
-                throw ;
+                throw;
             }
         }
 

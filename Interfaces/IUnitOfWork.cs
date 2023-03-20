@@ -3,6 +3,7 @@
     public interface IUnitOfWork
     {
         IAttendanceLogRepository attendanceLogRepository { get; }
+        IAttendanceLogStateRepository attendanceLogStateRepository { get; }
         IAttendanceLogTypeRepository attendanceLogTypeRepository { get; }
         IAttendanceLogStatusRepository attendanceLogStatusRepository { get; }
         IAuthenticationService authenticationRepository { get; }
