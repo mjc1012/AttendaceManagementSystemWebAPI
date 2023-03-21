@@ -1,3 +1,3 @@
-Admin Credentials:
-Id Number: Admin
+Admin Credentials:\n
+Id Number: Admin\n
 Password: Admin@123
