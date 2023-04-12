@@ -52,14 +52,14 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("{pairId}")]
-        public async Task<IActionResult> GetAttendanceLogs(string pairId)
+        [HttpGet("{employeeId}")]
+        public async Task<IActionResult> GetAttendanceLogs(int employeeId)
         {
 
             ResponseDto<List<AttendanceLogDto>> response;
             try
             {
-                List<AttendanceLogDto> logs = _mapper.Map<List<AttendanceLogDto>>(await _uow.attendanceLogRepository.GetAttendanceLogs(pairId));
+                List<AttendanceLogDto> logs = _mapper.Map<List<AttendanceLogDto>>(await _uow.attendanceLogRepository.GetAttendanceLogs(employeeId));
 
                 if (logs.Count > 0)
                 {
@@ -91,14 +91,16 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                 else
                     request.ImageName = _uow.imageService.SaveImage(request.Base64String);
                 AttendanceLog log = _mapper.Map<AttendanceLog>(request);
-                if (request.PairId == null || request.PairId == "")
+                if (request.EmployeeIdNumber == null || request.EmployeeIdNumber == "")
                 {
-                    log.Employee = await _uow.employeeRepository.GetEmployeeByEmployeeIdNumber(request.EmployeeIdNumber);
+                    log.Employee = await _uow.employeeRepository.GetEmployee(request.FirstName, request.MiddleName, request.LastName);
                 }
                 else
                 {
-                    log.Employee = await _uow.employeeRepository.GetEmployeeByPairId(request.PairId);
+                    log.Employee = await _uow.employeeRepository.GetEmployeeByEmployeeIdNumber(request.EmployeeIdNumber);
                 }
+
+                
                 DateTime requestTimeLog = DateTime.ParseExact(request.TimeLog, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                 if (request.AttendanceLogTypeName == null || request.AttendanceLogTypeName == "")
                 {
@@ -126,7 +128,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
                 if (log.AttendanceLogStatus.Id == 1)
                 {
-                    if ((TimeSpan.Compare(requestTimeLog.TimeOfDay, new TimeSpan(9, 0, 0)) == 1 && log.AttendanceLogType.Id == 1) || (TimeSpan.Compare(requestTimeLog.TimeOfDay, new TimeSpan(18, 0, 0)) == 1 && log.AttendanceLogType.Id == 2))
+                    if ((TimeSpan.Compare(requestTimeLog.TimeOfDay, new TimeSpan(9, 31, 0)) == 1 && log.AttendanceLogType.Id == 1) || (TimeSpan.Compare(requestTimeLog.TimeOfDay, new TimeSpan(18, 31, 0)) == 1 && log.AttendanceLogType.Id == 2))
                     {
                         log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(2);
                     }
@@ -208,6 +210,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAttendanceLog(int id)
         {

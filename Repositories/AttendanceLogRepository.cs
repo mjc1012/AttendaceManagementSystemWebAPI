@@ -26,11 +26,11 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             }
         }
 
-        public async Task<List<AttendanceLog>> GetAttendanceLogs(List<string> ids)
+        public async Task<List<AttendanceLog>> GetAttendanceLogs(List<int> ids)
         {
             try
             {
-                return await _context.AttendanceLogs.Where(p => ids.Contains(p.Id.ToString())).OrderByDescending(p => p.TimeLog).ThenBy(p => p.Employee.LastName).ThenBy(p => p.Employee.MiddleName).ThenBy(p => p.Employee.FirstName).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.AttendanceLogState).Include(p => p.Employee).ToListAsync();
+                return await _context.AttendanceLogs.Where(p => ids.Contains(p.Id)).OrderByDescending(p => p.TimeLog).ThenBy(p => p.Employee.LastName).ThenBy(p => p.Employee.MiddleName).ThenBy(p => p.Employee.FirstName).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.AttendanceLogState).Include(p => p.Employee).ToListAsync();
             }
             catch (Exception)
             {
@@ -62,11 +62,11 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             }
         }
 
-        public async Task<List<AttendanceLog>> GetAttendanceLogs(string pairId)
+        public async Task<List<AttendanceLog>> GetAttendanceLogs(int employeeId)
         {
             try
             {
-                return await _context.AttendanceLogs.Where(p => p.Employee.PairId == pairId).OrderByDescending(p => p.TimeLog).ThenBy(p => p.Employee.LastName).ThenBy(p => p.Employee.MiddleName).ThenBy(p => p.Employee.FirstName).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.AttendanceLogState).Include(p => p.Employee).ToListAsync();
+                return await _context.AttendanceLogs.Where(p => p.Employee.Id == employeeId).OrderByDescending(p => p.TimeLog).ThenBy(p => p.Employee.LastName).ThenBy(p => p.Employee.MiddleName).ThenBy(p => p.Employee.FirstName).Include(p => p.AttendanceLogType).Include(p => p.AttendanceLogStatus).Include(p => p.AttendanceLogState).Include(p => p.Employee).ToListAsync();
             }
             catch (Exception)
             {

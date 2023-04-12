@@ -70,11 +70,9 @@ namespace AttendaceManagementSystemWebAPI.Data
                {
                    Id = 1,
                    FirstName = "Admin",
-                   MiddleName = "",
                    LastName = "Admin",
                    EmailAddress = "Admin",
                    EmployeeIdNumber = "Admin",
-                   PairId = "1234",
                    ProfilePictureImageName = "default_image.jpg",
                    Password = PasswordHasher.HashPassword("Admin@123"),
                    EmployeeRoleId = 1

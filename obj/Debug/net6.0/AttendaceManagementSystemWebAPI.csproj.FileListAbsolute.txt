@@ -71,3 +71,4 @@ D:\THESIS FINAL OUTPUT\AttendaceManagementSystemWebAPI\bin\Debug\net6.0\MailKit.
 D:\THESIS FINAL OUTPUT\AttendaceManagementSystemWebAPI\bin\Debug\net6.0\MimeKit.dll
 D:\THESIS FINAL OUTPUT\AttendaceManagementSystemWebAPI\bin\Debug\net6.0\NETCore.MailKit.dll
 D:\THESIS FINAL OUTPUT\AttendaceManagementSystemWebAPI\bin\Debug\net6.0\BouncyCastle.Crypto.dll
+D:\THESIS FINAL OUTPUT\AttendaceManagementSystemWebAPI\bin\Debug\net6.0\Newtonsoft.Json.dll

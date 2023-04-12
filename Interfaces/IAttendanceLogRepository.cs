@@ -5,11 +5,11 @@ namespace AttendaceManagementSystemWebAPI.Interfaces
     public interface IAttendanceLogRepository
     {
         public Task<List<AttendanceLog>> GetAttendanceLogs();
-        public Task<List<AttendanceLog>> GetAttendanceLogs(string pairId);
+        public Task<List<AttendanceLog>> GetAttendanceLogs(int employeeId);
 
 
 
-        public Task<List<AttendanceLog>> GetAttendanceLogs(List<string> ids);
+        public Task<List<AttendanceLog>> GetAttendanceLogs(List<int> ids);
 
 
         public Task<AttendanceLog> GetAttendanceLog(int id);

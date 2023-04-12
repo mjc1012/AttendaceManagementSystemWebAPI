@@ -34,11 +34,11 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             }
         }
 
-        public async Task<List<Employee>> GetEmployees(List<string> pairIds)
+        public async Task<List<Employee>> GetEmployees(List<int> ids)
         {
             try
             {
-                return await _context.Employees.Where(p => pairIds.Contains(p.PairId)).ToListAsync();
+                return await _context.Employees.Where(p => ids.Contains(p.Id)).ToListAsync();
             }
             catch (Exception)
             {
@@ -71,17 +71,19 @@ namespace AttendaceManagementSystemWebAPI.Repositories
             }
         }
 
-        public async Task<Employee> GetEmployeeByPairId(string pairId)
+        public async Task<Employee> GetEmployee(string firstname, string middlename, string lastname)
         {
             try
             {
-                return await _context.Employees.Where(p => p.PairId.Trim() == pairId.Trim()).Include(p => p.EmployeeRole).FirstOrDefaultAsync();
+                return await _context.Employees.Where(p => p.FirstName == firstname && p.MiddleName == middlename
+                && p.LastName == lastname).Include(p => p.EmployeeRole).FirstOrDefaultAsync();
             }
-            catch (Exception )
+            catch (Exception)
             {
-                throw ;
+                throw;
             }
         }
+
 
         public async Task<Employee> GetEmployeeByEmployeeIdNumber(string employeeIdNumber)
         {

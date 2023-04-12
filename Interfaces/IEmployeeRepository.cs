@@ -10,11 +10,11 @@ namespace AttendaceManagementSystemWebAPI.Interfaces
 
         public void DetachEmployee(Employee employee);
 
-        public Task<List<Employee>> GetEmployees(List<string> pairIds);
+        public Task<List<Employee>> GetEmployees(List<int> ids);
         public Task<Employee> GetEmployee(int id);
-        public List<Employee> GetEmployeesAbsentOnDate(DateTime date, int logTypeId);
+        public Task<Employee> GetEmployee(string firstname, string middlename, string lastname);
 
-        public Task<Employee> GetEmployeeByPairId(string pairId);
+        public List<Employee> GetEmployeesAbsentOnDate(DateTime date, int logTypeId);
 
         public Task<Employee> GetEmployeeByEmployeeIdNumber(string employeeIdNumber);
 

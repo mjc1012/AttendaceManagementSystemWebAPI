@@ -45,7 +45,7 @@ namespace AttendaceManagementSystemWebAPI.Services
             var identity = new ClaimsIdentity(new Claim[]
             {
                 new Claim(ClaimTypes.Role, employee.EmployeeRole.Name),
-                new Claim(ClaimTypes.Name, employee.PairId)
+                new Claim(ClaimTypes.Name, employee.EmployeeIdNumber)
             });
 
             var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
@@ -53,7 +53,7 @@ namespace AttendaceManagementSystemWebAPI.Services
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = identity,
-                Expires = DateTime.Now.AddMinutes(5),
+                Expires = DateTime.Now.AddMinutes(1),
                 SigningCredentials = credentials,
             };
             var token = jwtTokenHandler.CreateToken(tokenDescriptor);

@@ -53,10 +53,6 @@ namespace AttendaceManagementSystemWebAPI.Helper
                 opt => opt.MapFrom(origin => origin.Employee.EmployeeIdNumber)
                 )
                  .ForMember(
-                destiny => destiny.PairId,
-                opt => opt.MapFrom(origin => origin.Employee.PairId)
-                )
-                 .ForMember(
                 destiny => destiny.FirstName,
                 opt => opt.MapFrom(origin => origin.Employee.FirstName)
                 )

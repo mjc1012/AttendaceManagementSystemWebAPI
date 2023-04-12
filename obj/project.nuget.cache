@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "rfkSQ5+19d6wPNV2uUxh4NFpRWiwH1bDxbmFsyeUEUmBp8TQKTVCLtXBUx+DVH0gLv0TaUBTb10GhDd0jH66FA==",
+  "dgSpecHash": "NscgTAeWE5bGHgQDGJamc3ZB+eKAUECciBKwF/UvgUho1+mKtsniL7RBeeR0NYAJPUzHfAobLWJG08rbKxk5ag==",
   "success": true,
   "projectFilePath": "D:\\THESIS FINAL OUTPUT\\AttendaceManagementSystemWebAPI\\AttendaceManagementSystemWebAPI.csproj",
   "expectedPackageFiles": [
@@ -41,6 +41,7 @@
     "C:\\Users\\MARC JOHN\\.nuget\\packages\\microsoft.win32.systemevents\\5.0.0\\microsoft.win32.systemevents.5.0.0.nupkg.sha512",
     "C:\\Users\\MARC JOHN\\.nuget\\packages\\mimekit\\3.2.0\\mimekit.3.2.0.nupkg.sha512",
     "C:\\Users\\MARC JOHN\\.nuget\\packages\\netcore.mailkit\\2.1.0\\netcore.mailkit.2.1.0.nupkg.sha512",
+    "C:\\Users\\MARC JOHN\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\MARC JOHN\\.nuget\\packages\\portable.bouncycastle\\1.9.0\\portable.bouncycastle.1.9.0.nupkg.sha512",
     "C:\\Users\\MARC JOHN\\.nuget\\packages\\swashbuckle.aspnetcore\\6.2.3\\swashbuckle.aspnetcore.6.2.3.nupkg.sha512",
     "C:\\Users\\MARC JOHN\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.2.3\\swashbuckle.aspnetcore.swagger.6.2.3.nupkg.sha512",

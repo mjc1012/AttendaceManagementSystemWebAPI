@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Globalization;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 
 namespace AttendaceManagementSystemWebAPI.Controllers
@@ -20,12 +22,16 @@ namespace AttendaceManagementSystemWebAPI.Controllers
     {
         private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
-        private readonly IConfiguration _config;
-        public EmployeeController(IUnitOfWork uow, IMapper mapper, IConfiguration config)
+        private readonly string _baseUrl;
+        private readonly HttpClient _client;
+        public EmployeeController(IUnitOfWork uow, IMapper mapper)
         {
             _uow = uow;
             _mapper = mapper;
-            _config = config;
+            _baseUrl = "https://localhost:7032/api/Person";
+            _client = new HttpClient();
+            _client.DefaultRequestHeaders.Accept.Clear();
+            _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
         [HttpPost("authenticate")]
@@ -62,32 +68,6 @@ namespace AttendaceManagementSystemWebAPI.Controllers
             }
         }
 
-        [HttpPost("authenticate-for-attendance")]
-        public async Task<IActionResult> AuthenticateForAttendance([FromBody] EmployeeDto request)
-        {
-            ResponseDto<EmployeeDto> response;
-            try
-            {
-                Employee employee = await _uow.employeeRepository.GetEmployeeByEmployeeIdNumber(request.EmployeeIdNumber);
-
-                if (employee == null || !PasswordHasher.VerifyPassword(request.Password, employee.Password))
-                {
-                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = "User Not Found" };
-                }
-                else
-                {
-                    response = new ResponseDto<EmployeeDto>() { Status = true, Message = "User Found", Value = _mapper.Map<EmployeeDto>(employee) };
-                }
-
-                return StatusCode(StatusCodes.Status200OK, response);
-            }
-            catch (Exception ex)
-            {
-                response = new ResponseDto<EmployeeDto>() { Status = false, Message = ex.Message };
-                return StatusCode(StatusCodes.Status500InternalServerError, response);
-            }
-        }
-
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(TokenDto tokenDto)
         {
@@ -95,8 +75,7 @@ namespace AttendaceManagementSystemWebAPI.Controllers
             try
             {
                 var principal = _uow.authenticationRepository.GetPrincipalFromExpiredToken(tokenDto.AccessToken);
-                var pairId = principal.Identity.Name;
-                Employee employee = await _uow.employeeRepository.GetEmployeeByPairId(pairId);
+                Employee employee = await _uow.employeeRepository.GetEmployeeByEmployeeIdNumber(principal.Identity.Name);
                 if (employee == null || employee.RefreshToken != tokenDto.RefreshToken || employee.RefreshTokenExpiryTime <= DateTime.Now)
                 {
                     response = new ResponseDto<TokenDto>() { Status = false, Message = "Invalid Request" };
@@ -208,13 +187,13 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("{pairId}")]
-        public async Task<IActionResult> GetEmployee(string pairId)
+        [HttpGet("{employeeIdNumber}")]
+        public async Task<IActionResult> GetEmployee(string employeeIdNumber)
         {
             ResponseDto<EmployeeDto> response;
             try
             {
-                EmployeeDto employees = _mapper.Map<EmployeeDto>(await _uow.employeeRepository.GetEmployeeByPairId(pairId));
+                EmployeeDto employees = _mapper.Map<EmployeeDto>(await _uow.employeeRepository.GetEmployeeByEmployeeIdNumber(employeeIdNumber));
 
                 if (employees != null)
                 {
@@ -234,10 +213,9 @@ namespace AttendaceManagementSystemWebAPI.Controllers
         }
 
 
-
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateEmployee([FromBody] EmployeeDto request)
+        public async Task<IActionResult> CreateEmployee([FromForm] EmployeeDto request)
         {
             ResponseDto<EmployeeDto> response;
             try
@@ -265,8 +243,14 @@ namespace AttendaceManagementSystemWebAPI.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, response);
                 }
 
-                request.ProfilePictureImageName = "default_image.jpg";
-                request.PairId = await _uow.authenticationRepository.CreateRefreshToken();
+                if(request.ImageFile == null)
+                {
+                    request.ProfilePictureImageName = "default_image.jpg";
+                }
+                else
+                {
+                    request.ProfilePictureImageName = _uow.imageService.SaveImage(request.ImageFile);
+                }
                 string tempPassword = request.FirstName.Replace(" ", string.Empty) + "Alliance" + request.LastName + "@123";
                 request.Password = PasswordHasher.HashPassword(tempPassword);
                 Employee employee = _mapper.Map<Employee>(request);
@@ -276,9 +260,28 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
                 if (employeeCreated != null)
                 {
-                    var emailObj = new Email(request.EmailAddress, "Account Credentials", EmailBody.CredentialsEmailBody(employeeCreated.EmployeeIdNumber, tempPassword));
-                    _uow.emailService.SendEmail(emailObj);
-                    response = new ResponseDto<EmployeeDto>() { Status = true, Message = "User Created", Value = _mapper.Map<EmployeeDto>(employeeCreated) };
+                    PersonDto person = new()
+                    {
+                        FirstName = employeeCreated.FirstName,
+                        LastName = employeeCreated.LastName,
+                        MiddleName = employeeCreated.MiddleName,
+                        PairId = employeeCreated.Id
+                    };
+
+                    HttpResponseMessage getData = await _client.PostAsJsonAsync(_baseUrl, person);
+
+                    if (getData.IsSuccessStatusCode)
+                    {
+                        var emailObj = new Email(request.EmailAddress, "Account Credentials", EmailBody.CredentialsEmailBody(employeeCreated.EmployeeIdNumber, tempPassword));
+                        _uow.emailService.SendEmail(emailObj);
+                        response = new ResponseDto<EmployeeDto>() { Status = true, Message = "User Created", Value = _mapper.Map<EmployeeDto>(employeeCreated) };
+                    }
+                    else
+                    {
+                        if (employee.ProfilePictureImageName != "default_image.jpg") _uow.imageService.DeleteImage(employeeCreated);
+                        bool deleted = await _uow.employeeRepository.DeleteEmployee(employeeCreated);
+                        response = new ResponseDto<EmployeeDto>() { Status = false, Message = "User Not Created" };
+                    }
                 }
                 else
                 {
@@ -295,21 +298,82 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
         [Authorize]
         [HttpPut]
-        public async Task<IActionResult> UpdateEmployee([FromBody] EmployeeDto request)
+        public async Task<IActionResult> UpdateEmployee([FromForm] EmployeeDto request)
         {
             ResponseDto<EmployeeDto> response;
             try
             {
+                
+                try
+                {
+                    var emailObj = new Email(request.EmailAddress, "Checking Email", EmailBody.CheckEmailBody());
+                    _uow.emailService.SendEmail(emailObj);
+                }
+                catch (Exception)
+                {
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = "Cannot contact Email" };
+                    return StatusCode(StatusCodes.Status500InternalServerError, response);
+                }
+
                 Employee oldEmployee = await _uow.employeeRepository.GetEmployee(request.Id);
+                Employee tempEmployee = new()
+                {
+                    Id = oldEmployee.Id,
+                    FirstName = oldEmployee.FirstName,
+                    MiddleName = oldEmployee.MiddleName,
+                    LastName = oldEmployee.LastName,
+                    EmailAddress = oldEmployee.EmailAddress,
+                    EmployeeIdNumber = oldEmployee.EmployeeIdNumber,
+                    EmployeeRole = oldEmployee.EmployeeRole
+                };
+
+                if (await _uow.employeeRepository.EmployeeIdNumberExists(request.EmployeeIdNumber) && oldEmployee.EmployeeIdNumber != request.EmployeeIdNumber)
+                {
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = "Id Number Already Exist" };
+                    return StatusCode(StatusCodes.Status200OK, response);
+                }
+
+                if (await _uow.employeeRepository.EmailAddressExists(request.EmailAddress) && oldEmployee.EmailAddress != request.EmailAddress)
+                {
+                    response = new ResponseDto<EmployeeDto>() { Status = false, Message = "Email Address Already Exist" };
+                    return StatusCode(StatusCodes.Status200OK, response);
+                }
+
                 oldEmployee.FirstName = request.FirstName;
                 oldEmployee.MiddleName = request.MiddleName;
                 oldEmployee.LastName = request.LastName;
                 oldEmployee.EmailAddress = request.EmailAddress;
                 oldEmployee.EmployeeIdNumber = request.EmployeeIdNumber;
-                oldEmployee.EmployeeRole = await _uow.employeeRoleRepository.GetEmployeeRole(request.EmployeeRoleName);
+                oldEmployee.EmployeeRole = await _uow.employeeRoleRepository.GetEmployeeRole(request.EmployeeRoleName); 
+                if (oldEmployee.ProfilePictureImageName != "default_image.jpg" && request.ImageFile != null) _uow.imageService.DeleteImage(oldEmployee);
+                if (request.ImageFile != null) oldEmployee.ProfilePictureImageName = _uow.imageService.SaveImage(request.ImageFile);
+                
 
                 _uow.employeeRepository.DetachEmployee(oldEmployee);
                 Employee employeeEdited = await _uow.employeeRepository.UpdateEmployee(oldEmployee);
+
+                if (employeeEdited.FirstName != tempEmployee.FirstName || employeeEdited.MiddleName != tempEmployee.MiddleName || employeeEdited.LastName != tempEmployee.LastName)
+                {
+
+                    PersonDto person = new()
+                    {
+                        FirstName = employeeEdited.FirstName,
+                        LastName = employeeEdited.LastName,
+                        MiddleName = employeeEdited.MiddleName,
+                        PairId = employeeEdited.Id
+                    };
+
+                    HttpResponseMessage getData = await _client.PutAsJsonAsync(_baseUrl, person);
+
+                    if (!getData.IsSuccessStatusCode)
+                    {
+
+                        _uow.employeeRepository.DetachEmployee(tempEmployee);
+                        Employee temp = await _uow.employeeRepository.UpdateEmployee(tempEmployee);
+                        response = new ResponseDto<EmployeeDto>() { Status = false, Message = "Something went wrong" };
+                        return StatusCode(StatusCodes.Status200OK, response);
+                    }
+                }
 
                 response = new ResponseDto<EmployeeDto>() { Status = true, Message = "User Updated", Value = _mapper.Map<EmployeeDto>(employeeEdited) };
 
@@ -386,10 +450,18 @@ namespace AttendaceManagementSystemWebAPI.Controllers
             try
             {
 
+                HttpResponseMessage getData = await _client.DeleteAsync($"{_baseUrl}/{id}");
+
+                if (!getData.IsSuccessStatusCode)
+                {
+                    response = new ResponseDto<bool>() { Status = false, Message = "Something went wrong" };
+                    return StatusCode(StatusCodes.Status200OK, response);
+                }
+
                 Employee employee = await _uow.employeeRepository.GetEmployee(id);
                 if (employee.ProfilePictureImageName != "default_image.jpg") _uow.imageService.DeleteImage(employee);
                 bool deleted = await _uow.employeeRepository.DeleteEmployee(employee);
-
+                
                 if (deleted)
                 {
                     response = new ResponseDto<bool>() { Status = true, Message = "User Deleted" };
@@ -408,13 +480,21 @@ namespace AttendaceManagementSystemWebAPI.Controllers
             }
         }
 
-
+        [Authorize]
         [HttpPut("delete-employees")]
         public async Task<IActionResult> DeleteEmployees([FromBody] DeleteRangeDto deleteRange)
         {
             ResponseDto<bool> response;
             try
             {
+                HttpResponseMessage getData = await _client.PutAsJsonAsync($"{_baseUrl}/delete-people", deleteRange);
+
+                if (!getData.IsSuccessStatusCode)
+                {
+                    response = new ResponseDto<bool>() { Status = false, Message = "Something went wrong" };
+                    return StatusCode(StatusCodes.Status200OK, response);
+                }
+
                 List<Employee> employees =await _uow.employeeRepository.GetEmployees(deleteRange.Ids);
                 bool deleted = await _uow.employeeRepository.DeleteEmployees(employees);
 

@@ -19,8 +19,6 @@ namespace AttendaceManagementSystemWebAPI.Dto
 
         public string EmployeeIdNumber { get; set; }
 
-        public string PairId { get; set; }
-
         public string FirstName { get; set; }
 
         public string MiddleName { get; set; }
