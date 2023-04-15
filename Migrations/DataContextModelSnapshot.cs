@@ -80,12 +80,12 @@ namespace AttendaceManagementSystemWebAPI.Migrations
                         new
                         {
                             Id = 1,
-                            Name = "Early"
+                            Name = "Within Work Time"
                         },
                         new
                         {
                             Id = 2,
-                            Name = "Late"
+                            Name = "Not Within Work Time"
                         },
                         new
                         {
@@ -212,8 +212,7 @@ namespace AttendaceManagementSystemWebAPI.Migrations
                             EmployeeRoleId = 1,
                             FirstName = "Admin",
                             LastName = "Admin",
-                            MiddleName = "",
-                            Password = "8jrD2qqFoxCnkHZuU5/hjyKfN0DqsFvxkdgIr2Wf3oc=",
+                            Password = "lHsgeMMQCKBRDLq/V6kAil1ow6cg33eP1m8bCgbEu8s=",
                             ProfilePictureImageName = "default_image.jpg",
                             RefreshTokenExpiryTime = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             ResetPasswordExpiry = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)

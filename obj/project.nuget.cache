@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "NscgTAeWE5bGHgQDGJamc3ZB+eKAUECciBKwF/UvgUho1+mKtsniL7RBeeR0NYAJPUzHfAobLWJG08rbKxk5ag==",
+  "dgSpecHash": "1K9SuE8oR5UOph/aGiRwCLRufp3zrdPW3zyBllKsI8/KMbqZa8fWvQ92CtKCfpUNOf+BrQS2bZex8gLhdXbpTw==",
   "success": true,
-  "projectFilePath": "D:\\THESIS FINAL OUTPUT\\AttendaceManagementSystemWebAPI\\AttendaceManagementSystemWebAPI.csproj",
+  "projectFilePath": "D:\\THESIS FINAL OUTPUT\\attendance backend\\AttendaceManagementSystemWebAPI\\AttendaceManagementSystemWebAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\MARC JOHN\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
     "C:\\Users\\MARC JOHN\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.0\\automapper.extensions.microsoft.dependencyinjection.12.0.0.nupkg.sha512",

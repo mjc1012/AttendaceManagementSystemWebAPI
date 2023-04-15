@@ -2649,11 +2649,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\THESIS FINAL OUTPUT\\AttendaceManagementSystemWebAPI\\AttendaceManagementSystemWebAPI.csproj",
+      "projectUniqueName": "D:\\THESIS FINAL OUTPUT\\attendance backend\\AttendaceManagementSystemWebAPI\\AttendaceManagementSystemWebAPI.csproj",
       "projectName": "AttendaceManagementSystemWebAPI",
-      "projectPath": "D:\\THESIS FINAL OUTPUT\\AttendaceManagementSystemWebAPI\\AttendaceManagementSystemWebAPI.csproj",
+      "projectPath": "D:\\THESIS FINAL OUTPUT\\attendance backend\\AttendaceManagementSystemWebAPI\\AttendaceManagementSystemWebAPI.csproj",
       "packagesPath": "C:\\Users\\MARC JOHN\\.nuget\\packages\\",
-      "outputPath": "D:\\THESIS FINAL OUTPUT\\AttendaceManagementSystemWebAPI\\obj\\",
+      "outputPath": "D:\\THESIS FINAL OUTPUT\\attendance backend\\AttendaceManagementSystemWebAPI\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\MARC JOHN\\AppData\\Roaming\\NuGet\\NuGet.Config"

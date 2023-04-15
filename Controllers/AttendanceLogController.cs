@@ -128,13 +128,13 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
                 if (log.AttendanceLogStatus.Id == 1)
                 {
-                    if ((TimeSpan.Compare(requestTimeLog.TimeOfDay, new TimeSpan(9, 31, 0)) == 1 && log.AttendanceLogType.Id == 1) || (TimeSpan.Compare(requestTimeLog.TimeOfDay, new TimeSpan(18, 31, 0)) == 1 && log.AttendanceLogType.Id == 2))
+                    if ((TimeSpan.Compare(requestTimeLog.TimeOfDay, new TimeSpan(9, 30, 0)) == 1 && log.AttendanceLogType.Id == 1) || (TimeSpan.Compare(requestTimeLog.TimeOfDay, new TimeSpan(18, 30, 0)) == -1 && log.AttendanceLogType.Id == 2))
                     {
-                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(2);
+                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(1);
                     }
                     else
                     {
-                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(1);
+                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(2);
                     }
                 }
                 else
@@ -183,13 +183,13 @@ namespace AttendaceManagementSystemWebAPI.Controllers
 
                 if (log.AttendanceLogStatus.Id == 1)
                 {
-                    if ((TimeSpan.Compare(log.TimeLog.TimeOfDay, new TimeSpan(9, 0, 0)) == 1 && log.AttendanceLogType.Id == 1) || (TimeSpan.Compare(log.TimeLog.TimeOfDay, new TimeSpan(18, 0, 0)) == 1 && log.AttendanceLogType.Id == 2))
+                    if ((TimeSpan.Compare(log.TimeLog.TimeOfDay, new TimeSpan(9, 30, 0)) == 1 && log.AttendanceLogType.Id == 1) || (TimeSpan.Compare(log.TimeLog.TimeOfDay, new TimeSpan(18, 30, 0)) == -1 && log.AttendanceLogType.Id == 2))
                     {
-                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(2);
+                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(1);
                     }
                     else
                     {
-                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(1);
+                        log.AttendanceLogState = await _uow.attendanceLogStateRepository.GetAttendanceLogState(2);
                     }
                 }
                 else

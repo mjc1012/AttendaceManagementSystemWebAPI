@@ -28,12 +28,12 @@ namespace AttendaceManagementSystemWebAPI.Data
                 new AttendanceLogState
                 {
                     Id = 1,
-                    Name = "Early",
+                    Name = "Within Work Time",
                 },
                 new AttendanceLogState
                 {
                     Id = 2,
-                    Name = "Late",
+                    Name = "Not Within Work Time",
                 },
                  new AttendanceLogState
                  {
